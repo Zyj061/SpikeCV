@@ -1,0 +1,317 @@
+# 数据加载
+
+## 数据集属性
+
+### 数据集属性配置文件
+
+目前所提供的数据集中可能包含多种数据，而且脉冲数据的分辨率也有多种设置。因此对于每一个数据集，我们都提供了一个配置文件 `config.yaml`。例如数据集`motVidarReal2020`中的配置文件内容如下：
+
+```yaml
+filename: rotation_digits # 文件名
+spike_w: 400 # 脉冲阵列宽度
+spike_h: 250 # 脉冲阵列高度
+is_labeled: true #是否带有标签数据
+labeled_data_type: [4, 5] #标签数据类型ID
+labeled_data_suffix: txt #标签数据文件格式后缀
+```
+
+标签数据类型ID和类型的对应关系为
+
+| 标签数据类型 | 无   | 重构  | 光流  | 单目深度 | 立体匹配+深度 | 检测  | 跟踪  | 识别  |
+| ------ | --- | --- | --- | ---- | ------- | --- | --- | --- |
+| ID     | 0   | 1   | 2   | 3.1  | 3.2     | 4   | 5   | 6   |
+
+这个对应关系存储在`spkData\load_dat.py`文件的`LABEL_DATA_TYPE`字典中：
+
+```python
+# key-value for generate data loader according to the type of label data
+LABEL_DATA_TYPE = {
+    'raw': 0,
+    'reconstruction': 1,
+    'optical_flow': 2,
+    'mono_depth_estimation': 3.1,
+    'stero_depth_estimation': 3.2,
+    'detection': 4,
+    'tracking': 5,
+    'recognition': 6
+}
+```
+
+### 获取属性字典
+
+为了便于加载数据，及模型设置，在获取数据时需首先提供数据集中某数据所在文件夹或数据名`data_filename`与任务名`label_type`获得数据集的属性。例如，在`motVidarReal2020`数据集上实现检测跟踪的任务：
+
+```python
+from spkData.load_dat import data_parameter_dict
+
+data_filename = "motVidarReal2020/spike59"
+label_type = "tracking"
+
+# 获取数据集参数字典
+paraDict = data_parameter_dict(data_filename, label_type)
+```
+
+Spike支持数据集拥有多级目录，且有较高自由度的数据放置形式。对于SpikeCV中包含的数据集及普遍视觉任务的数据集，普遍的数据与标签文件的放置形式有如下几种：
+
+（1）每个数据和对应标签文件单独放置于一个文件夹下，一个文件夹为一个样本。如`motVidarReal2020`数据集的实现中`spike59`作为一个样本文件夹，其下包含了相应的`spike.dat`与`spike_gt.txt`文件。
+
+（2）文件夹作为一个场景或一个集合放置多个数据，且数据与标签不放置与同一文件夹，如`PKU-Vidar-DVS`数据集的`train\Vidar\00152_driving_outdoor3\`文件夹存放了某序列场景的多个数据，`train\label\00152_driving_outdoor3\`存放相应的标签。
+
+对于情况（1），直接按照上述获取属性字典的方法进行即可；对于情况（2），需要在`config.yaml`配置文件中声明两个键值对作为索引数据与标签路径关系的字段标识符，例如（2）中例子，其配置文件如下：
+
+```yaml
+filename: PKU-Vidar-DVS # 文件名
+spike_w: 400 # 脉冲阵列宽度
+spike_h: 250 # 脉冲阵列高度
+is_labeled: true #是否带有标签数据
+labeled_data_type: [4] #标签数据类型ID
+labeled_data_suffix: txt #标签数据文件格式后缀
+label_field_identifier: labels  #标签路径标识符（可选）
+data_field_identifier: Vidar    #数据路径标识符（可选）
+```
+
+通过上述标识符`label_field_identifier`和`data_field_identifier`，`data_parameter_dict`函数可自动根据`train\Vidar\00152_driving_outdoor3\0.dat`文件定位到其对应标签路径`train\labels\00152_driving_outdoor3\0.txt`并将其在参数字典中返回。
+
+若数据集中没有指定任务类型对应的标签数据，或不存在指定的任务名，数据集参数字典将返回失败。返回的数据集参数字典`paraDict`中包含以下几种信息：
+
+```bash
+{'spike_h': 250, 
+'spike_w': 400, 
+'labeled_data_type': [4, 5], 
+'labeled_data_suffix': 'txt', 
+'labeled_data_dir': '..\\spkData\\datasets\\motVidarReal2020\\spike59\\spikes_gt.txt', 
+'filepath': '..\\spkData\\datasets\\motVidarReal2020\\spike59\\spikes.dat'}
+```
+
+除了表示脉冲阵列宽高的`spike_w`和`spike_h`，标签数据类型`labeled_data_type`外，还有脉冲数据文件和标签数据文件各自的路径名`filepath`和`labeled_data_dir`。用户可通过获取数据集参数字典中的键值来读取文件，或设置模型参数。
+
+## 脉冲数据
+
+### 数据格式及获取
+
+脉冲相机/模拟器产生的脉冲比特流采用`.dat`文件存储。以第一代脉冲相机为例，其分辨率为`250x400`，存储时按行扫描，取8位像素的比特转化为十进制数，再将转化之后的十进制数存入dat中。
+
+在`SpikeCV`中，可通过传入数据集参数字典`paraDict`来创建`VidarSpike`类对象，从而获取脉冲比特流矩阵，例如可通过以下方式获取脉冲：
+
+```python
+from spkData.load_dat import VidarSpike
+
+vidarSpikes = VidarSpike(**paraDict)
+
+#获取文件中所有脉冲流
+total_spikes = vidarSpikes.get_spike_matrix()
+
+#获取指定下标，固定长度的脉冲矩阵
+block_len = 1500
+spikes_patch = vidarSpikes.get_block_spikes(begin_idx=500, block_len=block_len)
+```
+
+### 脉冲格式转换
+
+加载的脉冲数据可以在torch.tensor和numpy.ndarrray间自如转换。用户可以通过构建SpikeCV.spkData.data_transform中的`ToNPYArray`和`ToTorchTensor`对象，自定义数据类型，实现数据类型转换。
+
+```python
+import SpikeCV.spkData.data_transform as transform
+import numpy as np
+import torch
+
+ndarray_spike_matrix = np.random.randint(2, size=(100, 32, 32)) # 生成长度为100，宽高为32的numpy数组脉冲序列
+
+# np.ndarray -> torch.tensor
+tensor_spike_matrix = transform.ToTorchTensor(type=torch.FloatTensor)(ndarray_spike_matrix)
+print(tensor_spike_matrix.shape, type(tensor_spike_matrix))
+
+# torch.tensor -> np.ndarray
+ndarray_spike_matrix = transform.ToNPYArray(type=np.float)(tensor_spike_matrix)
+print(ndarray_spike_matrix.shape, type(ndarray_spike_matrix))
+```
+
+### 脉冲模拟器
+
+介绍如何使用convert_img.py和convert_video.py和save_dat.py，及用途
+
+* **convert_img.py**
+  
+  函数功能介绍：该函数针对单张静态图片，基于模拟脉冲相机对光强积分发放脉冲的基本原理，将静态图片转化为一段指定长度的脉冲流。
+  
+  函数参数及使用：
+  
+  * `img`为待转化为脉冲的图片，要求为灰度图，格式为numpy.ndarray，尺寸为$H \times W$，可接受0-255整型或0-1浮点型。输入函数后将统一为0-1浮点型。
+  
+  * `gain_map`默认值为0.5，图像光转化率，在图片像素每次积分过程中乘以像素值获得增益/减弱后的像素值。
+  
+  * `v_th`默认值为1.0，为积分阈值，每次积分至阈值则发放脉冲。
+  
+  * `n_timestep`为转化脉冲流的时间步(长度)。
+
+* **convert_video.py**
+  
+  函数功能介绍：该函数用途为，基于模拟脉冲相机对光强积分发放脉冲的基本原理，进而实现将高帧率视频流转化为模拟脉冲流的功能。
+  
+  函数参数及使用：
+  
+  * `sourcefolder`为数据源文件夹，文件夹下需要存放拆分为图片帧形式的视频流数据，数据顺序和数据名字典序一致。
+  
+  * `format`为带转换的数据格式，默认`.png`，也可输入`.jpg`等。
+  
+  * `threshold`指模拟脉冲相机对光强积分的阈值，视频流的像素强度将归一化至0~1.0，该阈值默认为`5.0`，每次积分至阈值则发放脉冲，可根据需求适当上下调整。
+  
+  * `init_noise`指是否设置脉冲流初始随机噪声，一般设置为`True`，以模拟脉冲流的不规则性使其更逼近真实脉冲流。
+  
+  * `savefolder_debug`可设置为用于调试的文件夹路径，如指定，则函数会额外输出个`spike_debug.npy`文件到指定路径下用以用户调试使用。
+
+* **save_dat.py**
+  
+  函数功能介绍：将给定的$T \times H \times W$的numpy.ndarray格式的脉冲流转化为原始`.dat`的二进制文件。主要用以节省`.npy`文件的存储空间以及通过软件可视化等。
+  
+  函数参数及使用：
+  
+  * `save_path`为文件保存路径，路径须为包含文件名(及后缀)的全称。
+  
+  * `SpikeSeq`为待转格式的输入脉冲流，其格式为numpy.ndarray，尺寸为$T \times H \times W$。
+  
+  * `filpud`默认为True，设置是否存储为相机的倒像。
+  
+  * `delete_if_exists`默认为True，检查若`save_path`已经存在则删除原文件后保存新文件。
+
+## 光流数据集
+
+SpikeCV提供开源脉冲光流数据集`SPIFT(SPIkingly Flying Things)`与`PHM(Photo-realistic High-speed Motion)`，其中前者用于`SCFlow`算法的训练，后者用于从脉冲估计光流算法的评估。
+这两个数据集的下载地址为https://git.openi.org.cn/zhaor_pry/Dataset_SCFlow
+
+上述两个数据集文件夹的名称分别为`OpticalFlowSPIFT`和`OpticalFlowPHM`，其文件结构如下：
+
+```reStructuredText
+OpticalFlowSPIFT                       ||    OpticalFlowPHM
+|_____0                                ||    |_____ball
+|     |_____test.dat                   ||    |     |_____test.dat                
+|     |_____dt=10                      ||    |     |_____dt=10                   
+|     |       |_____flow               ||    |     |       |_____flow            
+|     |       |       |_____0000.flo   ||    |     |       |       |_____0000.flo
+|     |       |       | ...            ||    |     |       |       | ...         
+|     |       |                        ||    |     |       |                     
+|     |       |_____imgs               ||    |     |       |_____imgs            
+|     |       |       |_____0000.png   ||    |     |       |       |_____0000.png
+|     |       |       | ...            ||    |     |       |       | ...         
+|     |                                ||    |     |                             
+|     |_____dt=20                      ||    |     |_____dt=20                   
+|     |       |_____flow               ||    |     |       |_____flow            
+|     |       |       |_____0000.flo   ||    |     |       |       |_____0000.flo
+|     |       |       | ...            ||    |     |       |       | ...         
+|     |       |                        ||    |     |       |                     
+|     |       |_____imgs               ||    |     |       |_____imgs            
+|     |       |       |_____0000.png   ||    |     |       |       |_____0000.png
+|     |       |       | ...            ||    |     |       |       | ...         
+|     |       |                        ||    |     |       |                     
+|                                      ||    |       
+|_____1                                ||    |_____cook 
+|     ·                                ||    |     · 
+|     ·                                ||    |     · 
+|     ·                                ||    |     · 
+|_____110                              ||    |_____top
+```
+
+### SPIFT与PHM数据集的编码预处理
+
+在上述两个数据集中，对于每个场景，全部的脉冲数据都存储在了`test.dat`中，为了便于将数据输入`SCFlow`中，我们首先对两个数据集各个场景中的脉冲数据进行编码，将所有时间的脉冲数据切分为围绕各个时间点的脉冲数据。所切分的脉冲子序列的长度可以进行规定，在`SCFlow`中，脉冲子序列的长度为25。
+
+对上述两数据集进行编码预处理的两个脚本分别为`example`目录下的`spift_encoding.py`与`phm_encoding.py`，对脉冲进行编码的命令为在`examples`目录下执行如下命令：
+
+```bash
+# 编码预处理SPIFT数据集
+python3 spift_encoding.py --dt=10 --data_length=25
+python3 spift_encoding.py --dt=20 --data_length=25
+# 编码预处理PHM数据集
+python3 phm_encoding.py --dt=10 --data_length=25
+python3 phm_encoding.py --dt=20 --data_length=25
+```
+
+其中dt命令规定的是脉冲子序列中心时刻间隔的脉冲帧数，分别对应`SCFlow`中`dt=10`与`dt=20`的设置。
+
+### SPIFT与PHM数据集的接口
+
+SPIFT与PHM数据集的接口位于`spkData/load_optical_flow.py`文件中，分别为`Dataset_SPIFT`与`Dataset_PHM`两个类，这两个类都继承了`torch.utils.data.Dataset`。
+
+对于`Dataset_SPIFT`类，传入的参数包括：
+
+- `filepath`：数据集的路径
+- `spike_h`：脉冲阵列的高
+- `spike_w`：脉冲阵列的宽
+- `dt`：所使用光流对应的脉冲间距
+
+对于`Dataset_PHM`类，传入的参数除了上述四个参数外，还包括：
+
+- `scene`：读取PHM数据集中的哪一个场景
+
+上述两个类，在构建对象初始化时，会调用成员函数`collect_samples`，该函数旨在收集所有的（脉冲子序列1，脉冲子序列2，对应光流）组合的路径。在使用`PyTorch`的`DataLoader`进行调用时，这两个类的父类的固有的成员函数`__getitem__`会调用成员函数`_load_sample`，由该函数分别对两个脉冲子序列及光流进行读入。
+
+## 深度估计数据集
+
+SpikeCV提供开源双目脉冲深度数据集`Spike-Stero`, 该数据集提供室内及室外多场景下由同步标定的两台脉冲相机及一台深度相机采集的数据。每段短脉冲流都对应了一个相应的真实深度图作为标签。其中室内(indoor)包括43个场景、室外(outdoor)包括43个场景，且每个场景都有若干短脉冲流序列。数据集可供用户训练测试等。
+
+数据集文件夹名称为`Spike-Stero`，其文件结构如下：
+
+```reStructuredText
+Spike-Stero
+|_____indoor
+|        |_____left
+|        |        |_____0000             
+|        |        |        |_____0000---> 0000.dat, 0000_gt.npy
+|        |        |        | ...
+|        |        |        |_____00XX
+|        |        | 
+|        |        |_____0001
+|        |        | ...
+|        |        |_____0042
+|        |_____right
+|        |        ·
+|        |        ·
+|        |        ·
+|_____outdoor
+|        ·
+|        ·
+|        ·
+```
+
+下面介绍SpikeCV提供的Spike-Stero数据集接口：
+
+## 检测估计数据集
+
+SpikeCV中提供了开源脉冲数据集`PKU-Vidar-DVS`，供目标检测任务训练、验证及测试。PKU-Vidar-DVS 数据集包含 9 个室内和室外具有挑战性的场景，通过考虑速度分布、光照变化、类别多样性和对象规模等。该数据集使用“脉冲相机+DVS相机”的混合系统记录 490 个序列，包括脉冲流和DVS事件流，同时包含了以50Hz同步精准标注的物体包围框及其类别标签。在SpikeCV开源项目中，我们对原数据集标签进行一定预处理，提供了单模态的脉冲流与配对包围框标签的数据接口，供脉冲视觉社区开发及研究者使用。
+
+下面介绍数据集使用方法及数据目录放置结构:
+
+`PKU-Vidar-DVS`源数据集放置于[https://git.openi.org.cn/lijianing/PKU-Vidar-DVS/datasets](https://git.openi.org.cn/lijianing/PKU-Vidar-DVS/datasets)中，数据集分为了*train*、*val*、和*test*，每个部分分为*Vidar*、*DVS*、*labels*，分别放置脉冲流、事件流、及在事件流空间标定对齐的标签数据文件。SpikeCV目前只使用单模态的脉冲流进行开发，所以只用到*Vidar*文件夹。在本项目`数据集`中，`PKU_Vidar-DVS-SpikeLabels.zip`文件为经过预处理后将源标签数据转换为与脉冲流空间对齐的坐标。首先需要下载源数据集，解压后在*train*、*val*、和*test*文件夹下分别新建`SpikeLabels`文件夹；然后下载`PKU_Vidar-DVS-SpikeLabels.zip`数据集，解压后按照*train*、*val*、和*test*划分分别将标签数据放置到相应的`SpikeLabels`文件夹下。处理完毕后，文件结构应如下所示：
+
+```reStructuredText
+PKU-Vidar-DVS
+|_____train
+|       |_____Vidar
+|       |        |_____00001_rotation_5000K_200r             
+|       |        |       |------> 0.dat
+|       |        |       | ...
+|       |        |       |------> 199.dat
+|       |        | 
+|       |        |_____00001_rotation_5000K_800r
+|       |        | ...
+|       |        |_____00549_person_badminton_outdoor7
+|       |_____SpikeLabels
+|       |        |_____00001_rotation_5000K_200r             
+|       |        |       |------> 0.txt
+|       |        |       | ...
+|       |        |       |------> 199.txt
+|       |        | 
+|       |        |_____00001_rotation_5000K_800r
+|       |        | ...
+|       |        |_____00549_person_badminton_outdoor7
+|_____val
+|       ·
+|       ·
+|       ·
+|_____test
+|       ·
+|       ·
+|       ·
+```
+
+下面介绍SpikeCV提供的PKU-Vidar-DVS数据集接口：

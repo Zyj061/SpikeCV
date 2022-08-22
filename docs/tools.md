@@ -1,0 +1,132 @@
+# 数据处理工具箱
+
+## 可视化
+
+`visualization`模块下的可视化工具。
+
+> 下述使用例子中重复出现的变量名默认使用同样的定义/初始化，因此没有重复初始化
+
+### 结果保存至视频
+
+目前`visualization.get_video.py`中提供了一些将结果/脉冲阵列可视化成矩阵的函数接口：
+
+* `obtain_spike_video(spikes, video_filename, **dataDict)`：将`spikes`脉冲阵列转化为视频，并保存至文件名为`video_filename`的视频，`dataDict`为数据集属性字典，至少要包含`spike_h`和`spike_w`两个关键词。
+
+  使用例子：
+
+  ```python
+  from spkData import load_dat
+  from visualization import obtain_spike_video
+  
+  data_filename = "motVidarReal2020/spike59/"
+  label_type = 'detection'
+  para_dict = load_dat.data_parameter_dict(data_filename, label_type)
+  
+  # 获取脉冲阵列
+  vidarSpikes = VidarSpikes(**paraDict)
+  spikes = vidarSpikes.get_block_spikes(begin_idx=0, block_len=200)
+  
+  # 创建视频
+  obtain_spikes_video(spikes, "spikes59.avi", **paraDict)
+  ```
+
+  
+
+* `obtain_reconstruction_video(images, video_filename, **dataDict)`：将`image`图片序列转化为视频，并保存至文件名为`video_filename`的视频，`dataDict`为数据集属性字典，至少要包含`spike_h`和`spike_w`两个关键词。
+
+  使用例子：
+
+  ```python
+  from spkProc.reconstruction.tfstp import TFSTP
+  import torch
+  
+  device = torch.device('cuda')
+  reconstructor = TFSTP(paraDict.get('spike_h'), paraDict.get('spike_w'), device)
+  images= reconstructor.spikes2images_offline(spikes)
+  
+  obtain_reconstruction_video(images, "tfstp.avi", **paraDict)
+  ```
+
+  
+
+* `obtain_mot_video(spikes, video_filename, res_filepath, **dataDict)`：可视化多目标跟踪结果，以`spikes`为场景背景，可视化对应时刻上的多目标跟踪结果候选框，`res_filepath`算法的多目标跟踪结果文件。可视化结果保存至文件名为`video_filename`的视频，`dataDict`为数据集属性字典，需要包含`spike_h`、`spike_w`和标签数据路径`labeled_data_dir`三个关键词。
+
+  使用例子：
+
+  ```python
+  from spkProc.tracking.spike_sort import SpikeSORT
+  
+  spike_tracker = SpikeSORT(spikes, paraDict.get('spike_h'), paraDict.get('spike_w'), device)
+  spike_tracker.calibrate_motion(calibration_time)
+  tracking_results = 'spikesort_result.txt'
+  spike_tracker.get_results(tracking_file)
+  
+  # 可视化
+  obtain_mot_video(spikes, "spikesort_result.avi", tracking_results, **paraDict)
+  ```
+
+### 光流场可视化
+
+光流常通过颜色编码来进行可视化。目前`optical_flow_visualization.py`中提供了光流可视化的接口。
+
+- `flow_visualization(flow, mode='normal', use_cv2=True)`：光流可视化的接口
+
+  - `flow`：要可视化的光流, 要求输入为尺寸为$H \times W \times 2$的`numpy`浮点型张量。
+  - `mode`：光流可视化的模式，包含`normal`，`scflow`与`evflow`三种。
+  - `use_cv2`：后续是否使用`opencv`库输出图像，该库默认图像通道为BGR排列而非RGB排列。
+
+  目前的光流颜色编码可视化方案主要包括三种，在RGB光流中常用的方案(`mode='normal'`)，在事件相机光流中常用的方案(`mode='evflow'`)与`SCFlow`中的可视化方案(`mode='scflow'`)，其区别为运动与颜色的映射不同。通过以下命令即可运行脚本对比三种可视化方案：
+
+  ```bash
+  cd examples
+  python3 plot_flow_color_map.py
+  ```
+
+  ![flow_visualization](../docs/assets/flow_color_map.png)
+
+## 评价指标
+
+`metrics`模块下的评价工具。
+
+### 纹理重构质量评价
+
+目前纹理重构质量评价的指标主要包含参考评价指标，也即通过重构的图像与图像真值的对比来对所重构的图像进行评价。相关函数位于`reconstruction.py`中，目前包含`PSNR`, `SSIM`与`LPIPS`三种指标。三种函数的使用样例可在`examples/test_reconstruction_metrics.py`中找到。
+
+- PSNR指标函数接口：`calculate_psnr(img1, img2, border=0)`
+  - `img1`与`img2`：分别输入拟评价图像与图像真值
+  - `border`：对图像进行边缘裁剪，大多数时候使用默认值即可
+- SSIM指标函数接口：`calculate_psnr(img1, img2, border=0)`
+  - 参数与PSNR指标的接口相同
+- LPIPS指标接口: LPIPS类的成员函数`calculate_lpips(img1, img2)`
+  - `img1`与`img2`：分别输入拟评价图像与图像真值·
+
+### 光流估计性能评价
+
+`optical_flow.py`中包含了主流的光流评价指标Average End Point Error (AEPE)的计算函数，AEPE的含义为计算拟评价光流与光流真值在各像素上运动矢量之差的模长的平均值:
+$$
+{\rm AEPE} = \frac{1}{HW} \sum_{\mathbf{x}} \Vert \mathbf{w}_{\rm pred}(\mathbf{x}) - \mathbf{w}_{\rm gt}(\mathbf{x}) \Vert_2
+$$
+所对应的函数为`compute_epe(flow_gt, flow_pred)`:
+
+- `flow_gt`：光流真值，尺寸为$H \times W \times 2$的`numpy`浮点型张量
+- `flow_pred`：拟评价的光流，尺寸为$H \times W \times 2$的`numpy`浮点型张量
+
+### 多目标跟踪性能度量
+
+`metrics.tracking_mot`中提供了使用[py-motmetrics](https://github.com/cheind/py-motmetrics)模块评价在脉冲视觉上进行多目标跟踪任务的接口`TrackingMetrics`，其初始化方式为：
+
+```python
+from metrics.tracking_mot import TrackingMetrics
+
+metrics = TrackingMetrics(tracking_file, **paraDict)
+metrics.get_results() # 打印多目标跟踪度量结果
+```
+
+其中`tracking_file`为多目标跟踪结果的文本文件`txt`，`paraDict`数据集属性字典中需包含`labeled_data_dir`标签数据路径。度量结果输出格式如下示例：
+
+```basic
+      IDF1   IDP   IDR  Rcll  Prcn GT MT PT ML  FP  FN IDs  FM  MOTA  MOTP IDt IDa IDm
+full 93.6% 91.0% 96.5% 96.5% 91.0%  5  5  0  0 383 141   0  36 86.9% 0.465   0   0   0
+part  nan%  nan%  nan%  nan%  nan%  0  0  0  0   0   0   0   0  nan%   nan   0   0   0
+```
+

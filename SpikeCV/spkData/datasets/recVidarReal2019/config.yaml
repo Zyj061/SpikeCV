@@ -1,1 +1,6 @@
-
+filename: vidar_reconstruction2019
+spike_w: 400
+spike_h: 250
+is_labeled: false
+labeled_data_type: [0]
+labeled_data_suffix: None

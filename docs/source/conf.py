@@ -11,14 +11,6 @@ copyright = '2022, pku-nelvters'
 author = 'pku-nelvters'
 release = '0.0.1a'
 
-class Mock(MagicMock):
-    @classmethod
-    def __getattr__(cls, name):
-        return MagicMock()
-
-MOCK_MODULES = ['clr', 'System', 'System.Windows.Forms', 'System.Threading']
-sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
-
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 

@@ -1,0 +1,99 @@
+## Spike Link Input API 使用说明
+
+- ### 编译
+  - Windows 
+	```
+	- git clone SpikeCV 
+	- cd SpikeCV\device\spikevision\m1k40
+	- mkdir build & cd build
+	- cmake .. -G "Visual Studio 15 2017 Win64"
+	- cmake --build .
+	- python ./test/main.py -t 0 -fn "d:/data.bin"
+	```
+  - Linux 
+	```
+	- git clone SpikeCV 
+	- cd SpikeCV\device\spikevision\m1k40
+	- mkdir build & cd build
+	- cmake ..
+	- cmake
+	- python ./test/main.py -t 1 -dn "./libhda100.so"
+	```
+- ### 接口说明
+  - C/C++
+	```C++
+	#创建和销毁
+  SV_API ISpikeLinkInput* SV_CALLTYPE CreateSpikeLinkInput(SpikeLinkInitParams *params, ISpikeLinkInputObserver *obsver);
+  SV_API void SV_CALLTYPE DeleteSpikeLinkInput(ISpikeLinkInput *input);
+	
+  #function
+  void Fini()
+  int32_t Open() = 0;
+  int32_t Close() = 0;
+  bool IsOpen() = 0;
+  int32_t Start() = 0;
+  int32_t Stop() = 0;
+  int32_t GetState() = 0;
+  uint16_t SV_CALLTYPE AddRef() = 0;
+  uint16_t SV_CALLTYPE Release() = 0;
+  void SetCallback(ISpikeLinkInputObserver *obsver) = 0;
+  
+  #调用参考：SpikeCV\device\spikevision\m1k40\sdk\spikelinkapi\main.cpp
+  ```
+  - Python
+	```python
+	# python 调用 C/C++ 接口
+	SV_API void* SV_CALLTYPE CreateSpikeLinkInputPython();
+	SV_API int32_t SV_CALLTYPE Init(void *input, SpikeLinkInitParams *params);
+	SV_API void SV_CALLTYPE SetCallbackPython(void *input, InputCallBack callback)
+	SV_API bool SV_CALLTYPE IsOpen(void *input);
+	SV_API int32_t SV_CALLTYPE Open(void *input);
+	SV_API int32_t SV_CALLTYPE Close(void *input);
+	SV_API int32_t SV_CALLTYPE Start(void *input);
+	SV_API int32_t SV_CALLTYPE Stop(void *input);
+	SV_API int32_t SV_CALLTYPE GetState(void *input);
+	SV_API void SV_CALLTYPE Fini(void *input);
+	SV_API void SV_CALLTYPE ReleaseFrame(void* input, void* frame);
+	
+	#python 接口
+	class spikelinkInput :
+		__init__(self, path)
+		init(self, params)
+		setcallback(self, callback) 
+		release(self)
+		start(self)
+		stop(self)
+		open(self)
+		is_open(self)
+		close(self)
+		getState(self)
+		releaseFrame(self, frame)
+	
+	#python 回调接口
+	LinkInputCallBack = ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.c_void_p)
+	    
+	#调用参考：
+	SpikeCV\device\spikevision\m1k40\sdk\spikelinkapi.py
+	SpikeCV\device\spikevision\m1k40\test\main.py
+	
+	#示例：
+	input = link.spikelinkInput("./sdk/lib/Debug/spikelinkapi.dll")#输入参数C++数据采集库
+	params = link.SpikeLinkInitParams() #初始化参数
+	input.init(ctypes.byref(params)) #采集驱动初始化参数
+	input.setcallback(input_callback) #设置回调
+	input.open()
+	input.start()      
+	...
+	input.stop()
+	input.close()
+	
+	#特别说明
+	callback 回调底层一帧数据，放进处理队列，处理完毕后需要通过releaseFrame接口还回底层
+	```
+- ### 测试
+  - python 
+	```python
+	# dummy camera
+	python ./test/main.py -t 0 -fn "d:/data.bin"
+	# vidar camera
+	python ./test/main.py -t 1 -dn "./libhda100.so"

@@ -2,14 +2,22 @@
 
 #include <cassert>
 #include <chrono>
+#if (_MSC_VER >= 1920)
+#include <filesystem>
+#else
 #include <experimental/filesystem>
+#endif
 #include <string.h>
 #include <iostream>
 
 #include "loadlib.h"
 
 #if (_WIN32 | __GNUC__)
+#if (_MSC_VER >= 1920)
+namespace fs = std::filesystem;
+#else
 namespace fs = std::experimental::filesystem;
+#endif
 #else
 #pragma warning("unsupported platform, please check~!!!")
 #endif

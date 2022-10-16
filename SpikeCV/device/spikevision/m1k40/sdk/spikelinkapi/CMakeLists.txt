@@ -9,8 +9,7 @@ else()
  #   message(FATAL_ERROR "only linux is supported")
 endif()
 
-set(CMAKE_CXX_STANDARD 11)
-
+set(CMAKE_CXX_STANDARD 17)
 include(CTest)
 enable_testing()
 
@@ -27,7 +26,7 @@ set( EXE_SOURCES
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)
-
+add_definitions(-D_HAS_STD_BYTE=0)
 add_definitions(-DSV_EXPORTS)
 set(ROOT_DIR ${CMAKE_SOURCE_DIR})
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/../JR6101_v2/include)

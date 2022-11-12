@@ -25,7 +25,10 @@ def timer() :
             frame = framepool.pop()
             if DEBUG_OUT :
                 frame2 = ctypes.cast(frame, ctypes.POINTER(link.SpikeLinkVideoFrame))
-                print(frame2.contents.data[0])
+                spkdata = frame2.contents.data[0]
+                CharArr = ctypes.c_char * frame2.contents.size
+                char_arr = CharArr(*spkdata[:frame2.contents.size])
+                print("Data: {:}".format(char_arr.raw)) 
                 print("get frame:", frame2.contents.size, frame2.contents.width, frame2.contents.height, frame2.contents.pts)
             input.releaseFrame(frame)
         else :

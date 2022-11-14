@@ -8,7 +8,7 @@ class SVRational(ctypes.Structure) :
                 ("den", ctypes.c_int64)]
 
 class SpikeLinkVideoFrame(ctypes.Structure) :
-    _fields_ = [("data", ctypes.c_char_p * 3), 
+    _fields_ = [("data", ctypes.POINTER(ctypes.c_char) * 3), 
                 ("linesize", ctypes.c_int32 * 3),
                 ("format", ctypes.c_int32),
                 ("size", ctypes.c_int32), 

@@ -226,7 +226,20 @@ TFSTP类中的函数
 
    #. Zheng Y, Zheng L, Yu Z, et al. High-speed image reconstruction through short-term plasticity for spiking cameras[C]//Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2021: 6358-6367. 
 
+基于自监督盲点网络的纹理重构算法SSML_Recon
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+``spkProc.reconstruction.SSML_Recon.ssml_recon.py``\ 包含了定义\ ``SSML_ReconNet``\ 所需的类与函数。
+
+有关SSML_Recon的调用，请参考\ `使用例子 <https://git.openi.org.cn/Cordium/SpikeCV/src/branch/master/docs/examples.md>`_\ 中\ ``SSML_Recon``\ 的用例。
+
+..
+
+   更多关于SSML_Recon自监督重构算法的细节可参考论文: 
+
+
+   #. Chen S, et al. Self-Supervised Mutual Learning for Dynamic Scene Reconstruction of Spiking Camera[C]//International Joint Conferences on Artificial Intelligence Organization. 2022: 2859--2866. 
+   
 光流估计
 --------
 

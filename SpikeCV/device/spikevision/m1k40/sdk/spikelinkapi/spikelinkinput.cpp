@@ -1034,14 +1034,46 @@ int32_t SpikeLinkDummy::Stop() {
     return (0);
 }
 
-
-
 void SpikeLinkDummy::ReadSpikeThrd() {
     SpikeLinkVideoFrame* frame = framePool_->PopFrame(true);
 
     int32_t frameSize = SpikeFramePool::GetFrameSize(initParams_->picture.format,
                         initParams_->picture.width, initParams_->picture.height);
     int64_t pts = 0;
+    bool bFrameStartFound = false;
+    ifs_.read((char*)frame->data[0], SV_Block_SIZE * 3 / 2);
+    std::streamsize readSize = ifs_.gcount();
+    if (readSize < (SV_Block_SIZE * 3 / 2)) {
+        goto Exit;
+    }
+
+    do {
+        if (!bFrameStartFound) {
+            int chId = (((char*)frame->data[0])[(SV_Block_SIZE / 2 - 1)] >> 6) & 0x03;
+            int lineId = (((uint16_t*)frame->data[0])[(SV_Block_SIZE >> 2) - 1] >> 4) & 0x03ff;
+            int chId2 = (((char*)frame->data[0])[95] >> 6) & 0x03;
+            int lineId2 = (((uint16_t*)frame->data[0])[47] >> 4) & 0x03ff;
+
+            if (chId == 3 && lineId == 500 && chId2 == 0 && lineId2 == 500) {
+                bFrameStartFound = true;
+                break;
+            }
+
+            memmove(((char*)frame->data[0]), ((char*)frame->data[0]) + SV_Block_SIZE / 2, SV_Block_SIZE);
+            ifs_.read(((char*)frame->data[0]) + SV_Block_SIZE, SV_Block_SIZE / 2);
+            readSize = ifs_.gcount();    
+
+            if (readSize < (SV_Block_SIZE >> 1)) {
+                goto Exit;
+            }
+        }
+    } while (true);
+
+    if(!bFrameStartFound) {
+        goto Exit;
+    }
+
+    ifs_.seekg(-SV_Block_SIZE, ios::cur);
 
     while (state_ == SpikeLinkInputState::STARTED) {
         if (ifs_.peek() == EOF || ifs_.eof()) {
@@ -1054,6 +1086,10 @@ void SpikeLinkDummy::ReadSpikeThrd() {
 
         if (frame != nullptr) {
             ifs_.read((char*)frame->data[0], frameSize);
+            readSize = ifs_.gcount();
+            if(readSize < frameSize) {
+                break;
+            }
             frame->size = frameSize;
             frame->width = initParams_->picture.width;
             frame->height = initParams_->picture.height;
@@ -1070,6 +1106,7 @@ void SpikeLinkDummy::ReadSpikeThrd() {
         this_thread::sleep_for(chrono::milliseconds(2));
     }
 
+Exit:
     if (frame != nullptr) {
         framePool_->PushFrame(frame, true);
     }

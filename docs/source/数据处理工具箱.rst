@@ -33,8 +33,8 @@
      para_dict = load_dat.data_parameter_dict(data_filename, label_type)
 
      # 获取脉冲阵列
-     vidarSpikes = VidarSpikes(**paraDict)
-     spikes = vidarSpikes.get_block_spikes(begin_idx=0, block_len=200)
+     spikestream = SpikeStream(**paraDict)
+     spikes = spikestream.get_block_spikes(begin_idx=0, block_len=200)
 
      # 创建视频
      obtain_spikes_video(spikes, "spikes59.avi", **paraDict)

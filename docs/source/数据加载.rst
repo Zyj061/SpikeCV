@@ -117,20 +117,20 @@ Spike支持数据集拥有多级目录，且有较高自由度的数据放置形
 
 脉冲相机/模拟器产生的脉冲比特流采用\ ``.dat``\ 文件存储。以第一代脉冲相机为例，其分辨率为\ ``250x400``\ ，存储时按行扫描，取8位像素的比特转化为十进制数，再将转化之后的十进制数存入dat中。
 
-在\ ``SpikeCV``\ 中，可通过传入数据集参数字典\ ``paraDict``\ 来创建\ ``VidarSpike``\ 类对象，从而获取脉冲比特流矩阵，例如可通过以下方式获取脉冲：
+在\ ``SpikeCV``\ 中，可通过传入数据集参数字典\ ``paraDict``\ 来创建\ ``SpikeStream``\ 类对象，从而获取脉冲比特流矩阵，例如可通过以下方式获取脉冲：
 
 .. code-block:: python
 
-   from spkData.load_dat import VidarSpike
+   from spkData.load_dat import SpikeStream
 
-   vidarSpikes = VidarSpike(**paraDict)
+   spikestream = SpikeStream(**paraDict)
 
    #获取文件中所有脉冲流
-   total_spikes = vidarSpikes.get_spike_matrix()
+   total_spikes = spikestream.get_spike_matrix()
 
    #获取指定下标，固定长度的脉冲矩阵
    block_len = 1500
-   spikes_patch = vidarSpikes.get_block_spikes(begin_idx=500, block_len=block_len)
+   spikes_patch = spikestream.get_block_spikes(begin_idx=500, block_len=block_len)
 
 脉冲格式转换
 ^^^^^^^^^^^^

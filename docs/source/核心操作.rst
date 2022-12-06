@@ -76,7 +76,7 @@ STPFilter类中的函数
       device = torch.device('cuda') # 使用gpu
       stp_filter = STPFilter(spike_h=250, spike_w=400, device=device)
       for t in range(timestamps):
-          # spikes 是通过spkData.load_dat.VidarSpike对象获得的脉冲流
+          # spikes 是通过spkData.load_dat.SpikeStream对象获得的脉冲流
           input_spike = torch.from_numpy(spikes[t, :, :]).to(device)
           stp_filter.update_dynamics(t, input_spike)
 
@@ -326,7 +326,7 @@ SaccadeInput类中的函数
    import torch
 
    device = torch.device('cuda')
-   # spikes为使用VidarSpike实例获得的脉冲流矩阵
+   # spikes为使用SpikeStream实例获得的脉冲流矩阵
    spike_tracker = SpikeSort(spikes, spike_h=250, spike_w=400, box_size=20, device=device)
 
 SpikeSORT类中的变量

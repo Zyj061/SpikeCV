@@ -9,53 +9,51 @@ Spike Link Input API 使用说明
 * ### 编译
 
   * Windows 
-    .. code-block::
+    .. code-block:: bash
 
-       - git clone SpikeCV 
-       - cd SpikeCV\device\spikevision\m1k40
-       - mkdir build & cd build
-       - cmake .. -G "Visual Studio 15 2017 Win64"
-       - cmake --build .
-       - python ./test/main.py -t 0 -fn "d:/data.bin"
+       git clone SpikeCV
+       cd SpikeCV\device\spikevision\m1k40
+       mkdir build & cd build
+       cmake .. -G "Visual Studio 15 2017 Win64"
+       cmake --build .
+       python ./test/main.py -t 0 -fn "d:/data.bin"
 
   * Linux 
-    .. code-block::
+    .. code-block:: bash
 
-       - git clone SpikeCV 
-       - cd SpikeCV\device\spikevision\m1k40
-       - mkdir build & cd build
-       - cmake ..
-       - cmake
-       - python ./test/main.py -t 1 -dn "./libhda100.so"
+       git clone SpikeCV
+       cd SpikeCV\device\spikevision\m1k40
+       mkdir build & cd build
+       cmake ..
+       cmake
+       python ./test/main.py -t 1 -dn "./libhda100.so"
 
 * 
   ### 接口说明
 
 
   * C/C++
-    ```C++
-    #创建和销毁
-    SV_API ISpikeLinkInput\ * SV_CALLTYPE CreateSpikeLinkInput(SpikeLinkInitParams *\ params, ISpikeLinkInputObserver *obsver);
-    SV_API void SV_CALLTYPE DeleteSpikeLinkInput(ISpikeLinkInput *\ input);
+    .. code-block:: c++
+      #创建和销毁
+      SV_API ISpikeLinkInput\ * SV_CALLTYPE CreateSpikeLinkInput(SpikeLinkInitParams *\ params, ISpikeLinkInputObserver *obsver);
+      SV_API void SV_CALLTYPE DeleteSpikeLinkInput(ISpikeLinkInput *\ input);
 
-  #function
-  void Fini()
-  int32_t Open() = 0;
-  int32_t Close() = 0;
-  bool IsOpen() = 0;
-  int32_t Start() = 0;
-  int32_t Stop() = 0;
-  int32_t GetState() = 0;
-  uint16_t SV_CALLTYPE AddRef() = 0;
-  uint16_t SV_CALLTYPE Release() = 0;
-  void SetCallback(ISpikeLinkInputObserver *obsver) = 0;
+      #function
+      void Fini()
+      int32_t Open() = 0;
+      int32_t Close() = 0;
+      bool IsOpen() = 0;
+      int32_t Start() = 0;
+      int32_t Stop() = 0;
+      int32_t GetState() = 0;
+      uint16_t SV_CALLTYPE AddRef() = 0;
+      uint16_t SV_CALLTYPE Release() = 0;
+      void SetCallback(ISpikeLinkInputObserver *obsver) = 0;
 
   #调用参考：SpikeCV\device\spikevision\m1k40\sdk\spikelinkapi\main.cpp
 
-  .. code-block::
+  .. code-block:: python
 
-     - Python
-       ```python
        # python 调用 C/C++ 接口
        SV_API void* SV_CALLTYPE CreateSpikeLinkInputPython();
        SV_API int32_t SV_CALLTYPE Init(void *input, SpikeLinkInitParams *params);
@@ -107,6 +105,6 @@ Spike Link Input API 使用说明
 * ### 测试
 
   * python 接口测试用例在\ ``examples``\ 目录中
-    ```python
+    .. code-block:: python
     # dummy camera
     python test_device.py

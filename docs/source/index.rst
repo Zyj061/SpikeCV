@@ -38,8 +38,8 @@ SpikeCV 架构
 ===============
 
 
-.. image:: ./assets/spikecv_structure.png
-   :target: ./assets/spikecv_structure.png
+.. image:: ./assets/spikecv_architecture.png
+   :target: ./assets/spikecv_architecture.png
    :alt: spikecv_structure
 
 

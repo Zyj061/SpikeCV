@@ -38,8 +38,8 @@ SpikeCV 架构
 ===============
 
 
-.. image:: ./assets/spikecv_structure2.png
-   :target: ./assets/spikecv_structure2.png
+.. image:: ./assets/spikecv_structure.png
+   :target: ./assets/spikecv_structure.png
    :alt: spikecv_structure
 
 
@@ -65,7 +65,7 @@ SpikeCV 架构
      * ``Metrics`` —— 各类视觉任务结果的定量评价指标
      * ``Utils`` ——  辅助开发工具，例如数据路径处理等
 
-#. **Device Interface 硬件实时接口**\ ：提供脉冲相机驱动及配套的数据采集，实时数据处理接口。可支持用于目前已发行的脉冲相机，相关代码正在整理中。
+#. **Device Interface 硬件实时接口**\ ：提供脉冲相机驱动及配套的数据采集，实时数据处理接口。可支持用于目前已发行的脉冲相机，或使用离线文件进行模拟相机数据调试。
 
 安装说明
 ===============

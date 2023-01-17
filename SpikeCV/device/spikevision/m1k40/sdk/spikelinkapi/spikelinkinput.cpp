@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <chrono>
+#include <cmath>
 #if (_MSC_VER >= 1920)
 #include <filesystem>
 #else
@@ -9,6 +10,7 @@
 #endif
 #include <string.h>
 #include <iostream>
+#include <fstream>
 
 #include "loadlib.h"
 
@@ -117,6 +119,36 @@ int32_t SpikeFramePool::Init(int32_t format, int32_t width, int32_t height, int3
     return (rtv);
 }
 
+int32_t SpikeFramePool::Init(int32_t format, int32_t width, int32_t height, int32_t cusum, int32_t nSize) {
+    assert(format >= 0);
+    assert(width > 0);
+    assert(height > 0);
+    assert(nSize > 0);
+
+    if (format < 0 || width <= 0 || height <= 0 || nSize <= 0) {
+        return (-1);
+    }
+
+    int32_t rtv = -1;
+    {
+        unique_lock<mutex> lock(mtx_);
+
+        if (framePool_ != nullptr) {
+            DistoryFrameList();
+            framePool_.reset(nullptr);
+        }
+
+        int32_t frameSize = GetFrameSize(format, width, height);
+
+        if (frameSize <= 0) {
+            return (-1);
+        }
+
+        rtv = BuildFrameList(frameSize, cusum, nSize);
+    }
+    return (rtv);
+}
+
 int32_t SpikeFramePool::Init(int32_t frameSize, int32_t nframe) {
     assert(frameSize > 0);
     assert(nframe > 0);
@@ -135,6 +167,28 @@ int32_t SpikeFramePool::Init(int32_t frameSize, int32_t nframe) {
         }
 
         rtv = BuildFrameList(frameSize, nframe);
+    }
+    return (0);
+}
+
+int32_t SpikeFramePool::Init(int32_t frameSize, int32_t cusum, int32_t nSize) {
+    assert(frameSize > 0);
+    assert(nSize > 0);
+
+    if (frameSize <= 0 || cusum <= 0|| nSize <= 0) {
+        return (-1);
+    }
+
+    int32_t rtv = -1;
+    {
+        unique_lock<mutex> lock(mtx_);
+
+        if (framePool_ != nullptr) {
+            DistoryFrameList();
+            framePool_.reset(nullptr);
+        }
+
+        rtv = BuildFrameList(frameSize, cusum, nSize);
     }
     return (0);
 }
@@ -296,6 +350,26 @@ int32_t SpikeFramePool::BuildFrameList(int32_t frameSize, int32_t nframe) {
     return (0);
 }
 
+int32_t SpikeFramePool::BuildFrameList(int32_t frameSize, int32_t cusum, int32_t nSize) {
+    uint64_t buffSize = (uint64_t)frameSize * cusum * nSize;
+    framePool_.reset(new uint8_t[buffSize]);
+
+    if (framePool_.get() == nullptr) {
+        return (-1);
+    }
+
+    uint8_t* p = framePool_.get();
+
+    for (int i = 0; i < nSize; ++i) {
+        SpikeLinkVideoFrame* frame = BuildFrame(p, frameSize * cusum);
+        frame->size = frameSize * cusum;
+        list_.push_back(frame);
+        p += frameSize;
+    }
+
+    return (0);
+}
+
 void SpikeFramePool::DistoryFrameList() {
     deque<SpikeLinkVideoFrame*>::iterator iter = list_.begin();
 
@@ -316,8 +390,14 @@ void SpikeFramePool::DistoryFrameList() {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 //// Class SpikeLinkBaseInput
 
-SpikeLinkBaseInput::SpikeLinkBaseInput() : bExit_(false), devId_(-1), state_(UNKNOWN), initParams_(nullptr),initParams2_(nullptr),
-    obsver_(nullptr), framePool_(nullptr), recvThrd_(nullptr) {
+SpikeLinkBaseInput::SpikeLinkBaseInput() : bExit_(false), bSave_(false), devId_(-1), state_(UNKNOWN), initParams_(nullptr),initParams2_(nullptr),
+    obsver_(nullptr), framePool_(nullptr), savePool_(nullptr), recvThrd_(nullptr), saveCallback_(nullptr) {
+    for(int32_t i = 0; i < 4; i++) {
+        saveThrds_[i] = nullptr;
+        savePath_[i] = "";
+    }
+    saveCumsumNum_ = 0;
+    saveCumsumIndex_ = 0;
 }
 
 SpikeLinkBaseInput::~SpikeLinkBaseInput() {
@@ -331,8 +411,8 @@ int32_t SpikeLinkBaseInput::Init(SpikeLinkInitParams *initParams, ISpikeLinkInpu
 
     framePool_.reset(new SpikeFramePool);
 
-    if (framePool_->Init(initParams->picture.format, initParams->picture.width,
-                         initParams->picture.height, initParams->buff_size) != 0) {
+    if (framePool_->Init(initParams->picture.format, initParams->picture.width, initParams->picture.height, 
+                         initParams->cusum, initParams->buff_size) != 0) {
         return (-1);
     }
 
@@ -355,8 +435,8 @@ int32_t SpikeLinkBaseInput::Init(SpikeLinkInitParams *initParams) {
 
     framePool_.reset(new SpikeFramePool);
 
-    if (framePool_->Init(initParams->picture.format, initParams->picture.width,
-                         initParams->picture.height, initParams->buff_size) != 0) {
+    if (framePool_->Init(initParams->picture.format, initParams->picture.width, initParams->picture.height, 
+                         initParams->cusum, initParams->buff_size) != 0) {
         return (-1);
     }
 
@@ -381,6 +461,14 @@ void SpikeLinkBaseInput::Fini() {
         recvThrd_->join();
         recvThrd_.reset();
     }
+
+    for(int32_t i = 0; i < 4; i++) {
+        if(saveThrds_[i] != nullptr) {
+            saveThrds_[i]->join();
+            delete saveThrds_[i];
+            saveThrds_[i] = nullptr;
+        }
+    }
 }
 
 bool SpikeLinkBaseInput::IsOpen() {
@@ -396,7 +484,6 @@ void SpikeLinkBaseInput::RecvSpikeThrd() {
     while (!bExit_) {
         {
             unique_lock<mutex> lock(mtx_);
-
             while (framePool_->Size() <= 0 && !bExit_) {
                 cond_.wait(lock);
             }
@@ -412,10 +499,37 @@ void SpikeLinkBaseInput::RecvSpikeThrd() {
             obsver_->OnReceive(frame, 0);
         }
 
-         if (frame != nullptr && callback_ != nullptr) {
+        if (frame != nullptr && callback_ != nullptr) {
             callback_((void*)frame);
         }
     }
+}
+
+void SpikeLinkBaseInput::GetFrames(SpikeLinkVideoFrame** frames, int32_t* nFrame) {
+    SpikeLinkVideoFrame* frame = nullptr;
+    {
+        unique_lock<mutex> lock(mtx_);
+        while (framePool_->Size() > 0 ) {
+            frame = framePool_->PopFrame(false);
+            ReleaseFrame(frame);
+        }
+    }
+
+    {
+        unique_lock<mutex> lock(mtx_);
+
+        while (framePool_->Size() <= 0 && !bExit_) {
+            cond_.wait(lock);
+        }
+    }
+    if (bExit_) {
+        *frames = nullptr;
+        *nFrame = 0;
+        return;
+    }
+
+    *frames = framePool_->PopFrame(false);
+    *nFrame = initParams_->cusum;
 }
 
 void SpikeLinkBaseInput::ReleaseFrame(void* frame) {
@@ -439,6 +553,87 @@ void SpikeLinkBaseInput::SetCallbackPython(InputCallBack callback) {
     }
 }
 
+void SpikeLinkBaseInput::SaveFileThrd(int32_t index) {
+    SpikeLinkVideoFrame* frame = nullptr;
+    int64_t saveIndex = 0;
+    
+    while (!bExit_&& bSave_) {
+        {            
+            unique_lock<mutex> lock(mtx_);
+            while (savePool_->Size() <= 0 && !bExit_ && bSave_) {
+                cond_.wait(lock);
+            }
+        }
+
+        if (bExit_ || !bSave_) {
+            break;
+        }
+        
+        frame = savePool_->PopFrame(false);
+
+        fs::path path = savePath_[index];
+        saveIndex = frame->pts;
+        path /= std::to_string(saveIndex) + ".dat";
+        std::ofstream fout(path, std::ios_base::out | std::ios_base::binary);
+        if(!fout.is_open()) {
+            std::cout << "file open fail" << endl;
+            ReleaseFrame(frame);
+            bSave_ = false;
+            return;
+        }
+
+        fout.write((const char*)frame->data[0], frame->size);
+        fout.close();
+        ReleaseFrame(frame);
+
+        {
+            if(saveIndex >= (saveCumsumNum_ - 1))  {
+                if(saveCallback_ != nullptr) {
+                    saveCallback_();        
+                }
+                bSave_ = false;
+                saveCallback_ = nullptr;
+                break;
+            }
+        }
+
+    }
+}
+
+void SpikeLinkBaseInput::SaveFile(int8_t* filePath, int64_t nFrame, SaveDoneCallBack callback) {
+    if(bSave_) {
+        return;
+    }
+
+    {
+        unique_lock<mutex> lock(mtx_);
+        bSave_ = true;
+        saveCallback_ = callback;
+        saveCumsumNum_ = (int64_t)ceil((double)nFrame / initParams_->cusum);
+        saveCumsumIndex_ = 0;  
+
+        if(savePool_ == nullptr) {
+            savePool_.reset(new SpikeFramePool());
+        }
+    }
+    char path[256] = { 0 };
+    for(int32_t i = 0; i < 4; i++) {
+        sprintf(path, "%s/%d", filePath, i);
+        if(!fs::exists(path)) {
+            fs::create_directories(path);
+        }
+
+        savePath_[i] = path;
+    }
+
+    for(int32_t i = 0; i < 4; i++) {
+        if(saveThrds_[i] != nullptr) {
+            saveThrds_[i]->join();
+            delete saveThrds_[i];
+        }
+        saveThrds_[i] = new thread(&SpikeLinkBaseInput::SaveFileThrd, this, i);
+    }
+}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //// Class SpikeLinkQSFP
 #ifdef __GNUC__
@@ -639,6 +834,7 @@ int32_t SpikeLinkQSFP::Stop() {
     }
 
     state_ = OPENED;
+    cond_.notify_all();
     {
         if (readThrd_ != nullptr) {
             readThrd_->join();
@@ -725,7 +921,7 @@ void SpikeLinkQSFP::DecodeThrd() {
     SpikeLinkVideoFrame* frame = nullptr;
     bool bFoundFreamHead = false;
     int32_t heigth = initParams_->picture.height;
-    int32_t frameSize = SpikeFramePool::GetFrameSize(initParams_->picture.format, initParams_->picture.width, initParams_->picture.height);
+    int32_t frameSize = SpikeFramePool::GetFrameSize(initParams_->picture.format, initParams_->picture.width, initParams_->picture.height) * initParams_->cusum;
     int32_t leftSize = 0;
     int64_t pts = 0;
     while (state_ == STARTED) {
@@ -789,7 +985,12 @@ void SpikeLinkQSFP::DecodeThrd() {
             frame->width = initParams_->picture.width;
             frame->height = initParams_->picture.height;
             frame->pts = frame->dts = pts++;
-            framePool_->PushFrame(frame, false);
+            if(bSave_ && saveCumsumIndex_ < saveCumsumNum_) {
+                savePool_->PushFrame(frame, false);
+                frame->pts = frame->dts = saveCumsumIndex_++;               
+            } else {
+                framePool_->PushFrame(frame, false);
+            }
             frame = nullptr;
             cond_.notify_one();
 
@@ -857,6 +1058,8 @@ int32_t SpikeLinkQSFP::InitLinkDev() {
     if(linkDev_->DevMBSend == nullptr) {
         return (-1);
     }
+
+    return (0);
 }
 
 #endif
@@ -1419,6 +1622,16 @@ void SpikeLinkInputAdapter::SetCallbackPython(InputCallBack callback) {
     }
 }
 
+void SpikeLinkInputAdapter::GetFrames(SpikeLinkVideoFrame** frames, int32_t* nFrame) {
+    assert(input_ != nullptr);
+
+    if (input_ == nullptr || frames == nullptr) {
+        return;
+    }
+
+    input_->GetFrames(frames, nFrame);
+}
+
 void SpikeLinkInputAdapter::ReleaseFrame(void* frame) {
     assert(input_ != nullptr);
 
@@ -1428,4 +1641,14 @@ void SpikeLinkInputAdapter::ReleaseFrame(void* frame) {
 
     input_->ReleaseFrame(frame);
 
+}
+
+void SpikeLinkInputAdapter::SaveFile(int8_t* filePath, int64_t nFrame, SaveDoneCallBack callback) {
+    assert(input_ != nullptr);
+
+    if (input_ == nullptr || filePath == nullptr) {
+        return;
+    }
+
+    input_->SaveFile(filePath, nFrame, callback);
 }

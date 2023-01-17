@@ -3,6 +3,7 @@ import ctypes
 import threading
 
 LinkInputCallBack = ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.c_void_p)
+SaveDoneCallBack = ctypes.CFUNCTYPE(ctypes.c_void_p)
 class SVRational(ctypes.Structure) :
     _fields_ = [("num", ctypes.c_int64), 
                 ("den", ctypes.c_int64)]
@@ -46,6 +47,7 @@ class SpikeLinkInitParams(ctypes.Structure) :
                 ("mode", ctypes.c_uint32),
                 ("format", ctypes.c_uint32),
                 ("buff_size", ctypes.c_int32),
+                ("cusum", ctypes.c_int32),
                 ("picture", SVPicture)]
 
 class spikelinkInput :
@@ -106,6 +108,11 @@ class spikelinkInput :
             return
         p = ctypes.cast(frame, ctypes.c_void_p)
         self.linkinputlib.ReleaseFrame(self.obj, frame)
+
+    def saveFile(self, path, nFrame, callback) :
+        if self.linkinputlib == None :
+            return
+        self.linkinputlib.SaveFile(self.obj, path, nFrame, callback)
 
 class spikeframepool:
     def __init__(self):

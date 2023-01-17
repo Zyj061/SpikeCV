@@ -50,7 +50,11 @@ def inputcallback(frame) :
     count += 1
     # input.releaseFrame(frame)
 
+def savedonecallback() :
+    print("save finished")
+
 input_callback = link.LinkInputCallBack(inputcallback)
+save_callback = link.SaveDoneCallBack(savedonecallback)
 
 if __name__ == '__main__':
     parser= argparse.ArgumentParser()
@@ -77,7 +81,8 @@ if __name__ == '__main__':
     params.mode = 0x00002000
     params.format = 0x00010000
     params.picture = picture
-    params.buff_size = 300
+    params.buff_size = 30
+    params.cusum = 400
     params2.devName = b"./libhda100.so"
     params2.channels = 0
     params2.channelMode = 0
@@ -110,7 +115,8 @@ if __name__ == '__main__':
     input.init(ctypes.byref(params))
     input.setcallback(input_callback)
     input.open()
-    input.start()      
+    input.start()
+    input.saveFile("/home/spike/Work/data/test_save", 400*200, save_callback)      
 
     readthrd.join()
     brunning = False

@@ -148,4 +148,24 @@ SV_API void SV_CALLTYPE ReleaseFrame(void* input, void* frame) {
     adapter->ReleaseFrame(frame);
 }
 
+SV_API void SV_CALLTYPE GetFrames(void* input, SpikeLinkVideoFrame** frames, int32_t *nFrame) {
+    assert(input != nullptr);
+    if(input == nullptr) {
+        return ;
+    }
+
+    SpikeLinkInputAdapter* const adapter = (SpikeLinkInputAdapter*)input;
+    adapter->GetFrames(frames, nFrame);
+}
+
+SV_API void SV_CALLTYPE SaveFile(void* input, int8_t* filePath, int64_t nFrame, SaveDoneCallBack callback) {
+    assert(input != nullptr);
+    if(input == nullptr) {
+        return;
+    }
+
+    SpikeLinkInputAdapter* const adapter = (SpikeLinkInputAdapter*)input;
+    adapter->SaveFile(filePath, nFrame, callback);
+}
+
 } // end SpikeLinkInput

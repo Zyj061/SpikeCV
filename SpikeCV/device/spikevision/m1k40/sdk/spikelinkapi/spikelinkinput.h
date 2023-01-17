@@ -13,7 +13,7 @@
 
 #include "common.h"
 
-#define SV_FRAME_BUFF_SIZE     30
+#define SV_FRAME_BUFF_SIZE     400
 #define SV_Block_SIZE          64
 #define SV_M1K40_WIDTH         1024
 #define SV_MB_SIZE             1024*1024
@@ -56,7 +56,9 @@ class SpikeFramePool {
     ~SpikeFramePool();
 
     int32_t Init(int32_t format, int32_t width, int32_t height, int32_t nframe);
+    int32_t Init(int32_t format, int32_t width, int32_t height, int32_t cusum, int32_t nSize);
     int32_t Init(int32_t frameSize, int32_t nframe);
+    int32_t Init(int32_t frameSize, int32_t cusum, int32_t nSize);
     void Fini();
     static SpikeLinkVideoFrame* BuildFrame(int32_t format, int32_t width, int32_t height);
     static SpikeLinkVideoFrame* BuildFrame(uint8_t* buff, int32_t size);
@@ -72,6 +74,7 @@ class SpikeFramePool {
 
   private:
     int32_t BuildFrameList(int32_t frameSize, int32_t nframe);
+    int32_t BuildFrameList(int32_t frameSize, int32_t cusum, int32_t nSize);    
     void DistoryFrameList();
 
   private:
@@ -95,28 +98,36 @@ class SpikeLinkBaseInput {
     virtual int32_t Stop() = 0;
     virtual int32_t GetState();
     void ReleaseFrame(void* frame);
+    void GetFrames(SpikeLinkVideoFrame** frames, int32_t* nFrame);
     virtual void SetCallback(ISpikeLinkInputObserver *obsver);
     virtual void SetCallbackPython(InputCallBack callback);
+    void SaveFile(int8_t* filePath, int64_t nFrame,  SaveDoneCallBack callback); 
   protected:
 
   private:
     void RecvSpikeThrd();
+    void SaveFileThrd(int32_t index);
 
   protected:
     condition_variable  cond_;
     mutex frmListMtx_;
     mutex mtx_;
     bool bExit_;
+    bool bSave_;
     int32_t devId_;
     SpikeLinkInputState state_;
     shared_ptr<ISpikeLinkInputObserver> obsver_;
     unique_ptr<SpikeLinkInitParams> initParams_;
     unique_ptr<SpikeLinkInitParams2> initParams2_;
     unique_ptr<SpikeFramePool> framePool_;
-  
-  private:
-    unique_ptr<thread> recvThrd_;
+    unique_ptr<SpikeFramePool> savePool_;
 
+    unique_ptr<thread> recvThrd_;
+    SaveDoneCallBack saveCallback_;
+    thread* saveThrds_[4];
+    std::string savePath_[4];
+    int64_t saveCumsumNum_;
+    int64_t saveCumsumIndex_;
 };
 
 #ifdef __GNUC__
@@ -194,8 +205,10 @@ class SpikeLinkInputAdapter : public ISpikeLinkInput, public RefCount {
     uint16_t SV_CALLTYPE AddRef();
     uint16_t SV_CALLTYPE Release();
     void ReleaseFrame(void* frame);
+    void GetFrames(SpikeLinkVideoFrame** frames, int32_t* nFrame);
     void SetCallback(ISpikeLinkInputObserver *obsver);
     void SetCallbackPython(InputCallBack callback);
+    void SaveFile(int8_t* filePath, int64_t nFrame, SaveDoneCallBack callback);
   protected:
 
   private:

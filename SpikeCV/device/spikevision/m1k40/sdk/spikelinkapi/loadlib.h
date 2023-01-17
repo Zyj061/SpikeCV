@@ -5,7 +5,7 @@
 #include <windows.h>
 typedef HMODULE HandleType;
 #define LoadLib(filename) LoadLibraryA(filename)
-#define UnloadLib(handle) FreeLibrary(handle)
+#define UnLoadLib(handle) FreeLibrary(handle)
 #define GetProcAddressByName(handle, name) GetProcAddress(handle, name)
 #else
 #include <dlfcn.h>
@@ -36,7 +36,6 @@ public:
     }
 
     void* GetLibAPI(const char *name) {
-        char* error;
         int32_t errorId = 0;
 #ifdef WIN32
         GetLastError();
@@ -50,6 +49,7 @@ public:
             return (nullptr);
         }
 #else
+        char* error;
         if((error = dlerror()) != nullptr) {
             fprintf(stderr, "%s\n", error);
             return (nullptr);
@@ -61,7 +61,7 @@ public:
 
     ~LoadLibRAII() {
         if(handle_) {
-            UnloadLib(handle_);
+            UnLoadLib(handle_);
         }
     }
 

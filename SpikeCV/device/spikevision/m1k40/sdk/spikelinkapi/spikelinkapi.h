@@ -6,6 +6,8 @@
 #include <string>
 #include "spikelinkapitypes.h"
 
+ # pragma warning (disable:4819)
+
 // Type Declarations
 /* Enum SVDeviceInterface - Device interface type */
 
@@ -75,11 +77,12 @@ typedef struct SVPicture {
 /* SpikeLink initialization params */
 
 typedef struct SpikeLinkInitParams {
-        void*               opaque;
+    void*               opaque;
     SVDeviceInterface   type;
     SVDisplayMode       mode;
     SVPixelFormat       format;
     int32_t             buff_size;  // number of cached frames
+    int32_t             cusum;      //cusum as a cluster
     SVPicture           picture;
 } SPSDevInitParams;
 
@@ -92,7 +95,6 @@ typedef struct SpikeLinkInitParams2 {
     int32_t             buff_size;  // number of cached frames
     void*               opaque;
 } SPSDevInitParams2;
-
 
 /* SpikeLink  PCIe(QSFP40) input device  */
 
@@ -156,6 +158,7 @@ class SV_API ISpikeLinkInputObserver {
 extern "C" {
 //typedef void(*InputCallBack2)(uint8_t* data, int32_t size, int32_t width, int32_t height, int64_t pts);
 typedef void(*InputCallBack)(void *frame);
+typedef void(*SaveDoneCallBack)();
 }
 
 class SV_API ISpikeLinkInput {
@@ -197,7 +200,8 @@ SV_API int32_t SV_CALLTYPE Stop(void *input);
 SV_API int32_t SV_CALLTYPE GetState(void *input);
 SV_API void SV_CALLTYPE Fini(void *input);
 SV_API void SV_CALLTYPE ReleaseFrame(void* input, void* frame);
-
+SV_API void SV_CALLTYPE GetFrames(void* input, SpikeLinkVideoFrame** frames, int32_t *nFrame);
+SV_API void SV_CALLTYPE SaveFile(void* input, int8_t* filePath, int64_t nFrames, SaveDoneCallBack callback);
 } // SpikeLinkInput
 
 } //extern "C"

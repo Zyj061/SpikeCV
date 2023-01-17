@@ -16,7 +16,7 @@ using namespace std;
 
 namespace spslib_test {
 
-#define SPS_BLOCK_SIZE 400
+#define SPS_BLOCK_SIZE 10
 int32_t index = 0;
 
 #if SPIKECPLUSPLUS
@@ -206,6 +206,13 @@ class SPSLibTest {
         return SpikeLinkInput::SetCallbackPython(input, callback);
     }
 
+    void SaveFile(int8_t* path, int64_t nFrame, SaveDoneCallBack callback) {
+        if(input == nullptr) {
+            return;
+        }
+
+        return SpikeLinkInput::SaveFile(input, path, nFrame, callback);
+    }
 public:
     void* input;
     std::ofstream ofs;
@@ -279,6 +286,10 @@ void input_callback(void* frame) {
     test->ReleaseFrame(frame);
 }
 
+void save_callback() {
+    cout << "save finished" << endl;
+}
+
 int main(int argc, char *argv[])
 {
     unique_ptr<SpikeLinkInitParams> params(new SpikeLinkInitParams());
@@ -294,7 +305,8 @@ int main(int argc, char *argv[])
     params->picture.format = svFormat1BitGray;
     params->picture.width = 1024;
     params->picture.height = 1000;
-    params->buff_size = 300;
+    params->buff_size = 30;
+    params->cusum = 400;
 
     if (test->Init(params.get()) != 0) {
         return (-1);
@@ -309,6 +321,7 @@ int main(int argc, char *argv[])
     }
 
     test->Start();
+    test->SaveFile((int8_t*)"/home/spike/Work/data/test_save", 400*200, save_callback);
     getchar();
     test->Stop();
     test->Close();

@@ -42,7 +42,7 @@ SpikeCV 开源项目是在`Apache 2.0 许可证`下授权的，请参考[License
 
 ## 开发单位
 
-<img src="./docs/assets/pku_logo2.png" alt="pku_logo" style="zoom: 100%;" />
+<img src="./docs/assets/institute_logo.png" alt="pku_logo" style="zoom: 100%;" />
 
-**SpikeCV**是由北京大学牵头组织的开源项目。
+**SpikeCV**是由北京大学牵头组织，脉冲视觉公司参与的开源项目。
 

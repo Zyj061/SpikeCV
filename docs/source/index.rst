@@ -140,8 +140,8 @@ SpikeCV 开源项目是在\ ``Apache2.0许可证``\ 下授权的，请参考\ `L
 开发单位
 ===============
 
-.. image:: ./assets/pku_logo2.png
-   :target: ./assets/pku_logo2.png
-   :alt: pku_logo
+.. image:: ./assets/institute_logo.png
+   :target: ./assets/institute_logo.png
+   :alt: institute_logo
 
-**SpikeCV**\ 是由北京大学\ **视频与视觉技术国家工程研究中心**\ 牵头组织的开源项目。
+**SpikeCV**\ 是由北京大学\ **视频与视觉技术国家工程研究中心**\ 牵头组织, 脉冲视觉公司参与的开源项目。

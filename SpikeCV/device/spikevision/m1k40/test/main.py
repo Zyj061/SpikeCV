@@ -14,6 +14,8 @@ framepool = link.spikeframepool()
 count = 1
 brunning = True
 DEBUG_OUT = False
+SAVE_DAT_FILE = True
+SAVE_DAT_FILENAME = "test.dat"
 
 def timer() :
     global brunning
@@ -23,6 +25,24 @@ def timer() :
             break
         if framepool.size() > 0 :
             frame = framepool.pop()
+            if SAVE_DAT_FILE :
+                frame2 = ctypes.cast(frame, ctypes.POINTER(link.SpikeLinkVideoFrame))
+                spkdata = frame2.contents.data[0]
+                CharArr = ctypes.c_char * frame2.contents.size
+                char_arr = CharArr(*spkdata[:frame2.contents.size])
+                with open(SAVE_DAT_FILENAME, 'ab') as f: # append binary
+                    f.write(char_arr.raw)
+                # save yaml
+                if count < 3 :
+                    with open(SAVE_DAT_FILENAME[:-4] + ".yaml", 'w') as f: # write text
+                        f.write("filename: {:s}".format(SAVE_DAT_FILENAME))
+                        f.write("size: {:d}".format(frame2.contents.size))
+                        f.write("width: {:d}".format(frame2.contents.width))
+                        f.write("height: {:d}".format(frame2.contents.height))
+                        # f.write("pts: {:d}".format(frame2.contents.pts))
+                        # f.write("dts: {:d}".format(frame2.contents.dts))
+                        # f.write("duration: {:d}".format(frame2.contents.duration))
+
             if DEBUG_OUT :
                 frame2 = ctypes.cast(frame, ctypes.POINTER(link.SpikeLinkVideoFrame))
                 spkdata = frame2.contents.data[0]

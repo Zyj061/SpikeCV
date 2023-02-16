@@ -33,15 +33,14 @@ def timer() :
                 with open(SAVE_DAT_FILENAME, 'ab') as f: # append binary
                     f.write(char_arr.raw)
                 # save yaml
-                if count < 3 :
-                    with open(SAVE_DAT_FILENAME[:-4] + ".yaml", 'w') as f: # write text
-                        f.write("filename: {:s}".format(SAVE_DAT_FILENAME))
-                        f.write("size: {:d}".format(frame2.contents.size))
-                        f.write("width: {:d}".format(frame2.contents.width))
-                        f.write("height: {:d}".format(frame2.contents.height))
-                        # f.write("pts: {:d}".format(frame2.contents.pts))
-                        # f.write("dts: {:d}".format(frame2.contents.dts))
-                        # f.write("duration: {:d}".format(frame2.contents.duration))
+                with open(SAVE_DAT_FILENAME[:-4] + ".yaml", 'w') as f: # write text
+                    f.write("filename: {:s}".format(SAVE_DAT_FILENAME))
+                    f.write("size: {:d}".format(frame2.contents.size))
+                    f.write("width: {:d}".format(frame2.contents.width))
+                    f.write("height: {:d}".format(frame2.contents.height))
+                    # f.write("pts: {:d}".format(frame2.contents.pts))
+                    # f.write("dts: {:d}".format(frame2.contents.dts))
+                    # f.write("duration: {:d}".format(frame2.contents.duration))
 
             if DEBUG_OUT :
                 frame2 = ctypes.cast(frame, ctypes.POINTER(link.SpikeLinkVideoFrame))

@@ -91,7 +91,7 @@ if __name__ == '__main__':
     params2 = link.SpikeLinkQSFPInitParams()
     params3 = link.SpikeLinkDummyInitParams()
     picture = link.SVPicture()
-    picture.width = 1000
+    picture.width = 1024
     picture.height = 1000
     picture.format = 0x00010000
     picture.fps.num = 20000

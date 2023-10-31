@@ -1,0 +1,1 @@
+https://openi.pcl.ac.cn/Cordium/SpikeCV/src/branch/master/SpikeCV/spkProc/depth_estimation/SpikeT/s2d_weights/debug_A100_SpikeTransformerUNetConv_LocalGlobal-Swin3D-T

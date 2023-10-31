@@ -20,7 +20,8 @@ def SpikeToRaw(save_path, SpikeSeq, filpud=True, delete_if_exists=True):
             os.remove(save_path)
 
     sfn, h, w = SpikeSeq.shape
-    assert (h * w) % 8 == 0
+    remainder = int((h * w) % 8)
+    # assert (h * w) % 8 == 0
     base = np.power(2, np.linspace(0, 7, 8))
     fid = open(save_path, 'ab')
     for img_id in range(sfn):
@@ -30,7 +31,8 @@ def SpikeToRaw(save_path, SpikeSeq, filpud=True, delete_if_exists=True):
         else:
             spike = SpikeSeq[img_id, :, :]
         # numpy按自动按行排，数据也是按行存的
-        spike = spike.flatten()
+        # spike = spike.flatten()
+        spike = np.concatenate([spike.flatten(), np.array([0]*(8-remainder))])
         spike = spike.reshape([int(h*w/8), 8])
         data = spike * base
         data = np.sum(data, axis=1).astype(np.uint8)

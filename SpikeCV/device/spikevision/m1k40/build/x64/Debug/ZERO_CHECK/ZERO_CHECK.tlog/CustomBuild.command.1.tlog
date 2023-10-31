@@ -1,0 +1,10 @@
+^E:\WORK\RESEARCH\SPIKECV\SPIKECV\SPIKECV\DEVICE\SPIKEVISION\M1K40\BUILD\CMAKEFILES\445B96926105093F47F7B7F68DF6BCA1\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SE:/Work/research/SpikeCV/SpikeCV/SpikeCV/device/spikevision/m1k40 -BE:/Work/research/SpikeCV/SpikeCV/SpikeCV/device/spikevision/m1k40/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file E:/Work/research/SpikeCV/SpikeCV/SpikeCV/device/spikevision/m1k40/build/spikelinkapi.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

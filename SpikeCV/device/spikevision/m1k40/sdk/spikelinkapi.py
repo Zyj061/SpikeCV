@@ -24,6 +24,7 @@ class SpikeLinkVideoFrame(ctypes.Structure) :
 class SVPicture(ctypes.Structure) :
     _fields_ = [("width", ctypes.c_int32),
                 ("height", ctypes.c_int32),
+                ("ppsSize", ctypes.c_int32),
                 ("format", ctypes.c_uint32),
                 ("fps", SVRational),
                 ("time_base", SVRational)]
@@ -31,6 +32,12 @@ class SpikeLinkQSFPInitParams(ctypes.Structure) :
     _fields_ = [("devName", ctypes.c_char * 256),
                 ("channels", ctypes.c_int32),
                 ("channelMode", ctypes.c_int32)]
+    
+class SpikeLinkUSB3InitParams(ctypes.Structure) :
+    _fields_ = [("openByParam", ctypes.c_char * 256),
+                ("type", ctypes.c_int32),
+                ("packetSize", ctypes.c_uint32),
+                ("queueSize", ctypes.c_uint32)]
 
 class SpikeLinkDummyInitParams(ctypes.Structure) :
     _fields_ = [("fileName", ctypes.c_char * 256),
@@ -52,7 +59,7 @@ class SpikeLinkInitParams(ctypes.Structure) :
 
 class spikelinkInput :
     def __init__(self, path) :
-        print('load spikelinkapi lib')        
+        print('load spikelinkapi lib from ' + path)
         self.linkinputlib = ctypes.cdll.LoadLibrary(path)
         self.obj = self.linkinputlib.CreateSpikeLinkInputPython()
         self.brunning = False

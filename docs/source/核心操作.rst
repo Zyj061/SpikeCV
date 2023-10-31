@@ -1,6 +1,7 @@
 算法库
 ====================
 
+脉冲流处理，及面向各类视觉任务的算法.
 
 .. raw:: html
 
@@ -110,8 +111,8 @@ STPFilter类中的函数
 在使用\ ``update_dynamic``\ 和\ ``local_connect``\ 函数后，可获得原始脉冲阵列中运动区域部分对应的脉冲流，例如下图中，左侧为脉冲相机输出的脉冲流（vidar streams)，右图为经过STP滤波之后的结果：
 
 
-.. image:: ./assets/filter_spikes.png
-   :target: ./assets/filter_spikes.png
+.. image:: ./media/filter_spikes.png
+   :target: ./media/filter_spikes.png
    :alt: filtered_spikes
 
 
@@ -239,7 +240,7 @@ TFSTP类中的函数
 
 
    #. Chen S, et al. Self-Supervised Mutual Learning for Dynamic Scene Reconstruction of Spiking Camera[C]//International Joint Conferences on Artificial Intelligence Organization. 2022: 2859--2866. 
-   
+
 光流估计
 --------
 
@@ -313,8 +314,8 @@ SaccadeInput类中的函数
 目前\ ``SpikeCV``\ 中提供了面向脉冲相机的多目标跟踪算法\ ``spike-SORT``\ 的\ ``spkProc.detection.tracking.spike_sort.SpikeSORT``\ 类。其核心算法思想与传统基于检测的跟踪算法\ `SORT（simple online and realtime tracking） <https://arxiv.org/abs/1602.00763>`_\ 相同，我们通过一个多层网络检测脉冲阵列中的运动物体，进而通过联合不同时刻的检测结果实现连续的多目标跟踪。Spike-SORT的网络跟踪框架如下图所示：
 
 
-.. image:: ./assets/spike_sort.png
-   :target: ./assets/spike_sort.png
+.. image:: ./media/spike_sort.png
+   :target: ./media/spike_sort.png
    :alt: spike_sort
 
 
@@ -433,7 +434,7 @@ SpikeCV目前实现了丰富的数据增强方法，位于\ ``spkProc.augment``\
 为了展示这些数据增强功能，我们在\ ``examples/test_data_augmentation.py``\ 中提供了部分功能的可视化。
 
 
-.. image:: ./assets/data_augmentation.png
-   :target: ./assets/data_augmentation.png
+.. image:: ./media/data_augmentation.png
+   :target: ./media/data_augmentation.png
    :alt: data_augmentation
 

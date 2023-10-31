@@ -13,7 +13,7 @@ import numpy as np
 import cv2
 import time
 
-from spkData.load_dat import VidarSpike
+from spkData.load_dat import SpikeStream
 from spkData.save_dat import SpikeToRaw
 
 parser = argparse.ArgumentParser( )
@@ -39,7 +39,7 @@ for scene in scene_list:
     paraDict['spike_w'] = 800
     paraDict['print_dat_detail'] = False
 
-    vidarspike = VidarSpike(**paraDict)
+    vidarspike = SpikeStream(**paraDict)
     raw_spike = vidarspike.get_spike_matrix()
 
     c, h, w = raw_spike.shape

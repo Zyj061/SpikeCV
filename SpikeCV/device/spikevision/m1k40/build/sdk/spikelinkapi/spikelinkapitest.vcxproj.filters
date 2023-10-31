@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="E:\Work\research\SpikeCV\SpikeCV\SpikeCV\device\spikevision\m1k40\sdk\spikelinkapi\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="E:\Work\research\SpikeCV\SpikeCV\SpikeCV\device\spikevision\m1k40\sdk\spikelinkapi\refcount.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="E:\Work\research\SpikeCV\SpikeCV\SpikeCV\device\spikevision\m1k40\sdk\spikelinkapi\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{75C05D0C-9D81-3293-BA63-FD0D651604DD}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

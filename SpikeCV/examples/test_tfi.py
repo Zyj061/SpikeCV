@@ -10,7 +10,7 @@ sys.path.append("..")
 import time
 
 from spkData.load_dat import data_parameter_dict
-from spkData.load_dat import VidarSpike
+from spkData.load_dat import SpikeStream
 from spkProc.reconstruction.tfi import TFI
 from visualization.get_video import obtain_reconstruction_video
 from utils import path
@@ -23,7 +23,7 @@ label_type = 'raw'
 paraDict = data_parameter_dict(data_filename, label_type)
 
 #加载脉冲数据
-vidarSpikes = VidarSpike(**paraDict)
+vidarSpikes = SpikeStream(**paraDict)
 
 block_len = 500
 spikes = vidarSpikes.get_block_spikes(begin_idx=0, block_len=block_len)

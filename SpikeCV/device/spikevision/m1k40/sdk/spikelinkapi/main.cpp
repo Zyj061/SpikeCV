@@ -313,7 +313,7 @@ int main(int argc, char *argv[])
     }
 
     test->SetCallBack(input_callback);
-
+    
     test->Open();
 
     if (!test->IsOpen()) {

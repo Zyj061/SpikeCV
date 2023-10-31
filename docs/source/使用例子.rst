@@ -28,7 +28,7 @@ TFI重构算法
    recImg = reconstructor.spikes2images(spikes, half_win_length=20)
    ed = time.time()
    print('shape: ', recImg.shape, 'time: {:.6f}'.format(ed - st))
-s
+
 
    filename = path.split_path_into_pieces(data_filename)
    if not os.path.exists('results'):
@@ -40,8 +40,8 @@ s
 重构结果：
 
 
-.. image:: ./assets/car_reconstruction_tfi.gif
-   :target: ./assets/car_reconstruction_tfi.gif
+.. image:: ./media/car_reconstruction_tfi.gif
+   :target: ./media/car_reconstruction_tfi.gif
    :alt: car-100kmh_tfi
 
 
@@ -73,10 +73,10 @@ TFP重构算法
    paraDict = data_parameter_dict(data_filename, label_type)
 
    #加载脉冲数据
-   spikestream = SpikeStream(**paraDict)
+   vidarSpikes = SpikeStream(**paraDict)
 
    block_len = 500
-   spikes = spikestream.get_block_spikes(begin_idx=0, block_len=block_len)
+   spikes = vidarSpikes.get_block_spikes(begin_idx=0, block_len=block_len)
 
 使用\ ``spkProc.reconstruction.tfp.TFP``\ 进行重构并将结果输出保存至视频文件
 
@@ -101,8 +101,8 @@ TFP重构算法
 重构结果：
 
 
-.. image:: ./assets/car_reconstruction_tfp.gif
-   :target: ./assets/car_reconstruction_tfp.gif
+.. image:: ./media/car_reconstruction_tfp.gif
+   :target: ./media/car_reconstruction_tfp.gif
    :alt: car-100kmh_tfp
 
 
@@ -133,9 +133,9 @@ TFSTP重构算法
    pprint(paraDict)
 
    #加载脉冲数据
-   spikestream = SpikeStream(**paraDict)
+   vidarSpikes = SpikeStream(**paraDict)
    block_len = 1500
-   spikes = spikestream.get_block_spikes(begin_idx=500, block_len=block_len)
+   spikes = vidarSpikes.get_block_spikes(begin_idx=500, block_len=block_len)
 
 数据集记载成功后终端会输出：
 
@@ -164,8 +164,8 @@ TFSTP重构算法
 重构结果：
 
 
-.. image:: ./assets/car-100kmh_tfstp.gif
-   :target: ./assets/car-100kmh_tfstp.gif
+.. image:: ./media/car-100kmh_tfstp.gif
+   :target: ./media/car-100kmh_tfstp.gif
    :alt: car-100kmh_tfstp
 
 SSML重构算法
@@ -262,9 +262,9 @@ SSML重构算法
    pprint(paraDict)
 
    # 使用数据属性字典加载数据
-   spikestream = SpikeStream(**paraDict)
+   vidarSpikes = SpikeStream(**paraDict)
    block_len = 1000
-   spikes = spikestream.get_block_spikes(begin_idx=0, block_len=block_len)
+   spikes = vidarSpikes.get_block_spikes(begin_idx=0, block_len=block_len)
 
 若数据集加载成功，则终端会输出：
 
@@ -337,8 +337,8 @@ SSML重构算法
 * 在原始脉冲阵列上可视化跟踪结果，白色边框为标签数据，彩色边框为算法结果，不同颜色表示不同的跟踪器。
 
 
-.. image:: ./assets/spike59_mot.gif
-   :target: ./assets/spike59_mot.gif
+.. image:: ./media/spike59_mot.gif
+   :target: ./media/spike59_mot.gif
    :alt: spike59_mot
 
 
@@ -346,7 +346,7 @@ SSML重构算法
 * 在STP滤波后的脉冲阵列上的可视化跟踪结果
 
 
-.. image:: ./assets/spike59_filtered_mot.gif
-   :target: ./assets/spike59_filtered_mot.gif
+.. image:: ./media/spike59_filtered_mot.gif
+   :target: ./media/spike59_filtered_mot.gif
    :alt: spike59_filtered_mot
 

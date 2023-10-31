@@ -20,7 +20,7 @@ import os
 import torch
 import numpy as np
 
-from spkData.load_dat import data_parameter_dict, VidarSpike
+from spkData.load_dat import data_parameter_dict, SpikeStream
 
 
 class DatasetSpikeStero(torch.utils.data.Dataset):
@@ -87,8 +87,8 @@ class DatasetSpikeStero(torch.utils.data.Dataset):
             label = np.expand_dims(label, -1)
         label = np.moveaxis(label, -1, 0)  # H x W x 1 -> 1 x H x W
 
-        left_spike_obj = VidarSpike(filepath=left_dict['filepath'], spike_h=250, spike_w=400, print_dat_detail=False)
-        right_spike_obj = VidarSpike(filepath=right_dict['filepath'], spike_h=250, spike_w=400, print_dat_detail=False)
+        left_spike_obj = SpikeStream(filepath=left_dict['filepath'], spike_h=250, spike_w=400, print_dat_detail=False)
+        right_spike_obj = SpikeStream(filepath=right_dict['filepath'], spike_h=250, spike_w=400, print_dat_detail=False)
 
         left_spike = left_spike_obj.get_spike_matrix(flipud=True).astype(np.float32)
         right_spike = right_spike_obj.get_spike_matrix(flipud=True).astype(np.float32)
@@ -109,7 +109,7 @@ class DatasetSpikeStero_Mono(DatasetSpikeStero):
             label = np.expand_dims(label, -1)
         label = np.moveaxis(label, -1, 0)  # H x W x 1 -> 1 x H x W
 
-        left_spike_obj = VidarSpike(filepath=left_dict['filepath'], spike_h=250, spike_w=400, print_dat_detail=False)
+        left_spike_obj = SpikeStream(filepath=left_dict['filepath'], spike_h=250, spike_w=400, print_dat_detail=False)
         
         left_spike = left_spike_obj.get_spike_matrix(flipud=True).astype(np.float32)
         

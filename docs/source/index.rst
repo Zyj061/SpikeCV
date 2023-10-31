@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
    
-.. image:: ./assets/spikecv_logo.png
-   :target: ./assets/spikecv_logo.png
+.. image:: ./media/spikecv_logo.png
+   :target: ./media/spikecv_logo.png
    :alt: spikecv_logo
 
 
@@ -24,8 +24,8 @@
 超高速脉冲相机模拟灵长类视网膜编码原理，每个像素位置直接根据光强变化独立发放脉冲。如下图(b)中显示，当光子累计达到预先设定好的阈值时就产生脉冲比特流，1表示发放脉冲，0表示无脉冲。与图(a)中展示的传统相机成像区别是，常见的数码相机按照一个较低的固定频率产生静止图片序列，无法有效记录光的高速变化过程，例如拍摄场景存在高速运动时，产生的图片会存在运动模糊。而脉冲相机目前可按照40KHZ的频率将光信号转化为脉冲比特流，记录的视觉时空变化较为完整，可应用超高速视觉场景的采集、表示、编码、检测、跟踪和识别等任务。 
 
 
-.. image:: ./assets/spike_camera.png
-   :target: ./assets/spike_camera.png
+.. image:: ./media/spike_camera.png
+   :target: ./media/spike_camera.png
    :alt: spike_camera
 
 
@@ -38,8 +38,8 @@ SpikeCV 架构
 ===============
 
 
-.. image:: ./assets/spikecv_architecture.png
-   :target: ./assets/spikecv_architecture.png
+.. image:: ./media/spikecv_structure2.png
+   :target: ./media/spikecv_structure2.png
    :alt: spikecv_structure
 
 
@@ -65,7 +65,7 @@ SpikeCV 架构
      * ``Metrics`` —— 各类视觉任务结果的定量评价指标
      * ``Utils`` ——  辅助开发工具，例如数据路径处理等
 
-#. **Device Interface 硬件实时接口**\ ：提供脉冲相机驱动及配套的数据采集，实时数据处理接口。可支持用于目前已发行的脉冲相机，或使用离线文件进行模拟相机数据调试。
+#. **Device Interface 硬件实时接口**\ ：提供脉冲相机驱动及配套的数据采集，实时数据处理接口。可支持用于目前已发行的脉冲相机，相关代码正在整理中。
 
 安装说明
 ===============
@@ -140,8 +140,8 @@ SpikeCV 开源项目是在\ ``Apache2.0许可证``\ 下授权的，请参考\ `L
 开发单位
 ===============
 
-.. image:: ./assets/institute_logo.png
-   :target: ./assets/institute_logo.png
-   :alt: institute_logo
+.. image:: ./media/pku_logo2.png
+   :target: ./media/pku_logo2.png
+   :alt: pku_logo
 
-**SpikeCV**\ 是由北京大学\ **视频与视觉技术国家工程研究中心**\ 牵头组织, 脉冲视觉公司参与的开源项目。
+**SpikeCV**\ 是由北京大学\ **视频与视觉技术国家工程研究中心**\ 牵头组织的开源项目。

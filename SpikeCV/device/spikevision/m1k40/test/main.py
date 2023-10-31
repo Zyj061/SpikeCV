@@ -8,14 +8,14 @@ import time
 import argparse
 import struct
 import os
-
+import numpy as np
+from matplotlib import pyplot as plt
+# import matplotlib.pyplot as plt
 input = link.spikelinkInput("./sdk/lib/Debug/spikelinkapi.dll")
 framepool = link.spikeframepool()
 count = 1
 brunning = True
-DEBUG_OUT = False
-SAVE_DAT_FILE = True
-SAVE_DAT_FILENAME = "test.dat"
+DEBUG_OUT = True
 
 def timer() :
     global brunning
@@ -25,30 +25,40 @@ def timer() :
             break
         if framepool.size() > 0 :
             frame = framepool.pop()
-            if SAVE_DAT_FILE :
-                frame2 = ctypes.cast(frame, ctypes.POINTER(link.SpikeLinkVideoFrame))
-                spkdata = frame2.contents.data[0]
-                CharArr = ctypes.c_char * frame2.contents.size
-                char_arr = CharArr(*spkdata[:frame2.contents.size])
-                with open(SAVE_DAT_FILENAME, 'ab') as f: # append binary
-                    f.write(char_arr.raw)
-                # save yaml
-                with open(SAVE_DAT_FILENAME[:-4] + ".yaml", 'w') as f: # write text
-                    f.write("filename: {:s}".format(SAVE_DAT_FILENAME))
-                    f.write("size: {:d}".format(frame2.contents.size))
-                    f.write("width: {:d}".format(frame2.contents.width))
-                    f.write("height: {:d}".format(frame2.contents.height))
-                    # f.write("pts: {:d}".format(frame2.contents.pts))
-                    # f.write("dts: {:d}".format(frame2.contents.dts))
-                    # f.write("duration: {:d}".format(frame2.contents.duration))
-
             if DEBUG_OUT :
                 frame2 = ctypes.cast(frame, ctypes.POINTER(link.SpikeLinkVideoFrame))
                 spkdata = frame2.contents.data[0]
+                
                 CharArr = ctypes.c_char * frame2.contents.size
                 char_arr = CharArr(*spkdata[:frame2.contents.size])
-                print("Data: {:}".format(char_arr.raw)) 
+
+                data = np.frombuffer(char_arr, 'b')
+                data = np.array(data).astype(np.byte)
+                print(data.shape)
+
+                height = 1000
+                decode_width = 1024
+                pix_id = np.arange(0, height * decode_width)
+                pix_id = np.reshape(pix_id, (height, decode_width))
+                comparator = np.left_shift(1, np.mod(pix_id, 8))
+                byte_id = pix_id // 8
+                data_frame = data[byte_id]
+                result = np.bitwise_and(data_frame, comparator)
+                tmp_matrix = (result == comparator)
+                tmp_matrix = np.delete(tmp_matrix, [500, 501, 502, 503, 504, 505, 506, 507, 508, 509, 510, 511], 1)
+
+                tmp_matrix = np.delete(
+                    tmp_matrix,
+                    [1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010, 1011],
+                    1,
+                )
+                print(tmp_matrix.shape)
+                plt.imshow(tmp_matrix)
+                plt.show()
+                # plt.waitforbuttonpress()
+                # print("Data: {:}".format(char_arr.raw)) 
                 print("get frame:", frame2.contents.size, frame2.contents.width, frame2.contents.height, frame2.contents.pts)
+                exit(0)
             input.releaseFrame(frame)
         else :
             time.sleep(0.01)
@@ -60,7 +70,7 @@ def inputcallback(frame) :
 
     framepool.push(frame)
     if DEBUG_OUT :   
-        print(frame)
+        # print(frame)
         frame2 = ctypes.cast(frame, ctypes.POINTER(link.SpikeLinkVideoFrame))
         print("get frame:", frame2.contents.size, frame2.contents.width, frame2.contents.height, frame2.contents.pts)
     if count % 100 == 0 :
@@ -135,7 +145,7 @@ if __name__ == '__main__':
     input.setcallback(input_callback)
     input.open()
     input.start()
-    input.saveFile("/home/spike/Work/data/test_save", 400*200, save_callback)      
+    # input.saveFile("./home/spike/Work/data/test_save", 400*200, save_callback)    
 
     readthrd.join()
     brunning = False

@@ -8,7 +8,7 @@ import os.path as osp
 import numpy as np
 import torch
 import glob
-from spkData.load_dat import VidarSpike
+from spkData.load_dat import SpikeStream
 
 class Dataset_SPIFT(torch.utils.data.Dataset):
     def __init__(self, **kwargs):
@@ -45,11 +45,11 @@ class Dataset_SPIFT(torch.utils.data.Dataset):
     
     def _load_sample(self, s):
         self.kwargs_dat['filepath'] = s['seq1_path']
-        self.vidarSpikes = VidarSpike(**self.kwargs_dat)
+        self.vidarSpikes = SpikeStream(**self.kwargs_dat)
         seq1 = self.vidarSpikes.get_spike_matrix(flipud=False).astype(np.float32)
 
         self.kwargs_dat['filepath'] = s['seq2_path']
-        self.vidarSpikes = VidarSpike(**self.kwargs_dat)
+        self.vidarSpikes = SpikeStream(**self.kwargs_dat)
         seq2 = self.vidarSpikes.get_spike_matrix(flipud=False).astype(np.float32)
 
         flow = readFlow(s['flow_path']).astype(np.float32)
@@ -105,11 +105,11 @@ class Dataset_PHM(torch.utils.data.Dataset):
     
     def _load_sample(self, s):
         self.kwargs_dat['filepath'] = s['seq1_path']
-        self.vidarSpikes = VidarSpike(**self.kwargs_dat)
+        self.vidarSpikes = SpikeStream(**self.kwargs_dat)
         seq1 = self.vidarSpikes.get_spike_matrix().astype(np.float32)
 
         self.kwargs_dat['filepath'] = s['seq2_path']
-        self.vidarSpikes = VidarSpike(**self.kwargs_dat)
+        self.vidarSpikes = SpikeStream(**self.kwargs_dat)
         seq2 = self.vidarSpikes.get_spike_matrix().astype(np.float32)
 
         flow = readFlow(s['flow_path']).astype(np.float32)

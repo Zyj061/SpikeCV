@@ -6,7 +6,7 @@
 #include <string>
 #include "spikelinkapitypes.h"
 
- # pragma warning (disable:4819)
+# pragma warning (disable:4819)
 
 // Type Declarations
 /* Enum SVDeviceInterface - Device interface type */

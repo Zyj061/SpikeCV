@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="E:\Work\research\SpikeCV\SpikeCV\SpikeCV\device\spikevision\m1k40\build\CMakeFiles\c38dfcd185a58429994d2057d0c1b77c\RUN_TESTS_force.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{85B17B0C-F839-3228-B79F-022BD13E3C44}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

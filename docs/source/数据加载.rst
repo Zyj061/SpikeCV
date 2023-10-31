@@ -2,6 +2,8 @@
 离线数据加载
 ========
 
+脉冲数据的加载，及脉冲-标签数据的封装加载.
+
 数据集属性
 ----------
 
@@ -123,14 +125,14 @@ Spike支持数据集拥有多级目录，且有较高自由度的数据放置形
 
    from spkData.load_dat import SpikeStream
 
-   spikestream = SpikeStream(**paraDict)
+   vidarSpikes = SpikeStream(**paraDict)
 
    #获取文件中所有脉冲流
-   total_spikes = spikestream.get_spike_matrix()
+   total_spikes = vidarSpikes.get_spike_matrix()
 
    #获取指定下标，固定长度的脉冲矩阵
    block_len = 1500
-   spikes_patch = spikestream.get_block_spikes(begin_idx=500, block_len=block_len)
+   spikes_patch = vidarSpikes.get_block_spikes(begin_idx=500, block_len=block_len)
 
 脉冲格式转换
 ^^^^^^^^^^^^

@@ -61,11 +61,11 @@ class TFP:
 
         T = spikes.shape[0]
 
-        if (key_id - half_win_length < 0) or (key_id + half_win_length > T):
+        if (key_ts - half_win_length < 0) or (key_ts + half_win_length > T):
             raise ValueError('The length of spike stream {:d} is not enough for half window length {:d} at key time stamp {:d}'.format(T, half_win_length, key_ts))
         
         spikes = spikes[key_ts - half_win_length : key_ts + half_win_length + 1]
-        spikes = torch.from_numpy(sipkes).to(self.device).float()
+        spikes = torch.from_numpy(spikes).to(self.device).float()
 
         Image = spikes.mean(dim=0) * 255
         Image = Image.cpu().detach().numpy().astype(np.uint8)

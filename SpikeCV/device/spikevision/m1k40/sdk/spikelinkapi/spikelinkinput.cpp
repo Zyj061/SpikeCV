@@ -1241,7 +1241,7 @@ void SpikeLinkDummy::ReadSpikeThrd() {
     SpikeLinkVideoFrame* frame = framePool_->PopFrame(true);
 
     int32_t frameSize = SpikeFramePool::GetFrameSize(initParams_->picture.format,
-                        initParams_->picture.width, initParams_->picture.height) * initParams_->cusum;
+                        initParams_->picture.width, initParams_->picture.height);
     int64_t pts = 0;
     bool bFrameStartFound = false;
     ifs_.read((char*)frame->data[0], SV_Block_SIZE * 3 / 2);

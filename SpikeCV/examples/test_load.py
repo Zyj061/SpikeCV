@@ -13,6 +13,7 @@ sys.path.append("..")
 
 import numpy as np
 from spkData import load_dat
+from spkData.load_dat_jy import SpikeStream
 from utils import path
 from pprint import pprint
 
@@ -27,6 +28,21 @@ pprint(para_dict)
 #  'labeled_data_type': [4, 5],
 #  'spike_h': 250,
 #  'spike_w': 400}
+s = SpikeStream(offline=True, **para_dict)
+s.get_block_spikes(0, 200)
+print(isinstance(s.SpikeMatrix, np.ndarray))
+s.to_tensor()
+print(isinstance(s.SpikeMatrix, np.ndarray))
+s.to_numpy()
+print(isinstance(s.SpikeMatrix, np.ndarray))
+print(s.SpikeMatrix.__class__)
+print(s.SpikeMatrix.shape)
+# RESULT:
+# True
+# False
+# True
+# <class 'numpy.ndarray'>
+# (200, 250, 400)
 
 data_filename2 = 'Spike-Stero/indoor/left/0000/0000/'
 label_type = 'stero_depth_estimation'

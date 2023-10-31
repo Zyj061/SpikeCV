@@ -1,0 +1,12 @@
+E:/Work/research/SpikeCV/SpikeCV/SpikeCV/device/spikevision/m1k40/build/CMakeFiles/Experimental.dir
+E:/Work/research/SpikeCV/SpikeCV/SpikeCV/device/spikevision/m1k40/build/CMakeFiles/Nightly.dir
+E:/Work/research/SpikeCV/SpikeCV/SpikeCV/device/spikevision/m1k40/build/CMakeFiles/Continuous.dir
+E:/Work/research/SpikeCV/SpikeCV/SpikeCV/device/spikevision/m1k40/build/CMakeFiles/NightlyMemoryCheck.dir
+E:/Work/research/SpikeCV/SpikeCV/SpikeCV/device/spikevision/m1k40/build/CMakeFiles/PACKAGE.dir
+E:/Work/research/SpikeCV/SpikeCV/SpikeCV/device/spikevision/m1k40/build/CMakeFiles/RUN_TESTS.dir
+E:/Work/research/SpikeCV/SpikeCV/SpikeCV/device/spikevision/m1k40/build/CMakeFiles/ALL_BUILD.dir
+E:/Work/research/SpikeCV/SpikeCV/SpikeCV/device/spikevision/m1k40/build/CMakeFiles/ZERO_CHECK.dir
+E:/Work/research/SpikeCV/SpikeCV/SpikeCV/device/spikevision/m1k40/build/sdk/spikelinkapi/CMakeFiles/spikelinkapi.dir
+E:/Work/research/SpikeCV/SpikeCV/SpikeCV/device/spikevision/m1k40/build/sdk/spikelinkapi/CMakeFiles/spikelinkapitest.dir
+E:/Work/research/SpikeCV/SpikeCV/SpikeCV/device/spikevision/m1k40/build/sdk/spikelinkapi/CMakeFiles/PACKAGE.dir
+E:/Work/research/SpikeCV/SpikeCV/SpikeCV/device/spikevision/m1k40/build/sdk/spikelinkapi/CMakeFiles/RUN_TESTS.dir

@@ -10,7 +10,7 @@ sys.path.append("..")
 from spkProc.reconstruction.SSML_Recon.ssml_model import SSML_ReconNet
 import cv2, os
 from spkData.load_dat import data_parameter_dict
-from spkData.load_dat import VidarSpike
+from spkData.load_dat import SpikeStream
 from utils import path
 
 if __name__ == '__main__':
@@ -27,7 +27,7 @@ if __name__ == '__main__':
     paraDict = data_parameter_dict(data_filename, label_type)
 
     #加载脉冲数据
-    vidarSpikes = VidarSpike(**paraDict)
+    vidarSpikes = SpikeStream(**paraDict)
     block_len = 41
     spikes = vidarSpikes.get_block_spikes(begin_idx=0, block_len=block_len) # T H W numpy
 

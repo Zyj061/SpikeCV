@@ -176,6 +176,22 @@ SSML重构算法
 
 训练时，需要准备数据集文件夹。文件夹结构按照\ ``dataset_name\input\*.dat``\ 的形式组织。调整训练文件的参数，或者直接运行训练文件以默认参数进行训练。由于SSML重构算法用于没有GroundTruth的真实场景重构，所以没有PSNR指标。用户可以在若干小时后使用保存的中间模型权重来进行测试，查看是否达到了预期的重构结果。
 
+SRR超分重构算法
+^^^^^^^^^^^^^
+``example``\ 中的\ ``test_SRR.py``\ 提供了\ ``SRR_moedl``\ 网络测试的样例。
+
+本算法需要安装 Pyflow（https://github.com/pathak22/pyflow）依赖库，用于计算光流。
+
+克隆仓库后，执行以下命令：（对于windows系统，还需要将pyflow/src/project.h中的 #define _LINUX_MAC 语句注释掉。）
+
+cd pyflow/
+
+python setup.py build_ext -i
+
+随后将生成的.pyd文件（windows系统）或.so文件（linux系统）复制到工作目录下。
+
+测试时，直接读取.dat文件，截取240个时间步送入预训练网络，即可生成超分图。
+
 光流估计
 --------
 

@@ -182,13 +182,13 @@ SRR超分重构算法
 
 本算法需要安装 Pyflow（https://github.com/pathak22/pyflow）依赖库，用于计算光流。
 
-克隆仓库后，执行以下命令：（对于windows系统，还需要将pyflow/src/project.h中的 #define _LINUX_MAC 语句注释掉。）
+克隆仓库后，执行以下命令：（对于Windows系统，还需要将pyflow/src/project.h中的 #define _LINUX_MAC 语句注释掉。）
 
 cd pyflow/
 
 python setup.py build_ext -i
 
-随后将生成的.pyd文件（windows系统）或.so文件（linux系统）复制到工作目录下。
+随后将生成的.pyd文件（Windows系统）或.so文件（Linux系统）复制到工作目录下。
 
 测试时，直接读取.dat文件，截取240个时间步送入预训练网络，即可生成超分图。
 

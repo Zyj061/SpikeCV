@@ -1,3 +1,4 @@
+# Learning Super-Resolution Reconstruction for High Temporal Resolution Spike Stream (TCSVT 21, Xijie Xiang)
 from __future__ import print_function
 
 import os

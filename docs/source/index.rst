@@ -118,7 +118,7 @@ SpikeCV 架构
 
    @misc{SpikeCV,
        title = {SpikeCV},
-       author = {Zheng, Yajing and Zhang, Jiyuan and Zhao Rui and Ding, Jianhao and Li, Jianing and and Yu, Zhaofei, Huang, Tiejun and other contributors},
+       author = {Zheng, Yajing and Zhang, Jiyuan and Zhao Rui and Ding, Jianhao and Li, Jianing and Chen, Shiyan and Yu, Zhaofei, Huang, Tiejun and other contributors},
        year = {2022},
        howpublished = {\url{https://git.openi.org.cn/Cordium/SpikeCV.git}},
    }

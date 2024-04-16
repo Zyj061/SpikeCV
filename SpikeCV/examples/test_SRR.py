@@ -98,12 +98,12 @@ vidarSpikes = SpikeStream(**paraDict)
 block_len = 240
 spikes = vidarSpikes.get_block_spikes(begin_idx=0, block_len=block_len) # T H W numpy
 #预处理数据
-middle, neigbor = spike2img(spikes, spikes.shape[0])
+input, neigbor = spike2img(spikes, spikes.shape[0])
 flow = [get_flow(input, j) for j in neigbor]  # 分别计算当前帧和-3、-2、-1、1、2、3帧的光流：(120, 180, 3) (120, 180, 3) -> (120, 180, 2)
-input = ToTensor()(input)  # PIL.Image (180, 120) -> Tensor (3, 120, 180)
-neigbor = [ToTensor()(j) for j in neigbor]  # 6 * PIL.Image (180, 120) -> 6 * Tensor (3, 120, 180)
-flow = [torch.from_numpy(j.transpose(2, 0, 1)) for j in flow]  # 6 * ndarray (120, 180, 2) -> 6 * ndarray (2, 120, 180) -> 6 * Tensor (2, 120, 180)
-spike = torch.from_numpy(spikes.copy()).float()
+input = ToTensor()(input).unsqueeze(0)  # PIL.Image (180, 120) -> Tensor (1, 3, 120, 180)
+neigbor = [ToTensor()(j).unsqueeze(0) for j in neigbor]  # 6 * PIL.Image (180, 120) -> 6 * Tensor (1, 3, 120, 180)
+flow = [torch.from_numpy(j.transpose(2, 0, 1)).unsqueeze(0) for j in flow]  # 6 * ndarray (120, 180, 2) -> 6 * ndarray (2, 120, 180) -> 6 * Tensor (1, 2, 120, 180)
+spike = torch.from_numpy(spikes.copy()).float().unsqueeze(0)
 test_set = [[input, neigbor, flow, spike]]
 
 print('===> Building model')

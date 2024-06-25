@@ -1,0 +1,6 @@
+filename: BSS
+spike_w: 1000
+spike_h: 1000
+is_labeled: false
+labeled_data_type: [7]
+labeled_data_suffix: None

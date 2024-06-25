@@ -16,7 +16,7 @@ import torchvision.transforms as transforms
 import yaml
 import glob
 
-from sps_parser import SPSParser
+from .sps_parser import SPSParser
 
 sys.path.append("..")
 from utils import path
@@ -32,7 +32,8 @@ LABEL_DATA_TYPE = {
     'stero_depth_estimation': 3.2,
     'detection': 4,
     'tracking': 5,
-    'recognition': 6
+    'recognition': 6,
+    'bayer': 7
 }
 
 

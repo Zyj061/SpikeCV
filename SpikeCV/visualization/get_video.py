@@ -72,13 +72,12 @@ def obtain_mot_video(spikes, video_filename, res_filepath, **dataDict):
             gt_boxes[str(time_step)].append(bbox)
 
         gt_f.close()
-
     result_file = res_filepath
     test_boxes = {}
     result_f = open(result_file, 'r')
     result_lines = result_f.readlines()
     color_dict = {}
-
+    
     for line in result_lines:
         res_box = line.split(',')
         time_step = res_box[0]
@@ -103,7 +102,7 @@ def obtain_mot_video(spikes, video_filename, res_filepath, **dataDict):
     mov = cv2.VideoWriter(video_filename, cv2.VideoWriter_fourcc(*'MJPG'), 30, (spike_w, spike_h))
 
     timestamps = spikes.shape[0]
-    for t in range(151, timestamps):
+    for t in range(151,timestamps):
     # for t in range(160, 1000):
         tmp_ivs = spikes[t, :, :] * 255
         tmp_ivs = cv2.cvtColor(tmp_ivs.astype(np.uint8), cv2.COLOR_GRAY2BGR)
@@ -115,9 +114,14 @@ def obtain_mot_video(spikes, video_filename, res_filepath, **dataDict):
                 for i in range(gt_num):
                     box = gts[i]
                     box_id = box[0]
-                    cv2.rectangle(tmp_ivs, (int(box[2]), int(box[1])),
-                                  (int(box[2] + box[4]), int(box[1] + box[3])),
+                    # 下面的代码似乎x和y搞反了
+                    # cv2.rectangle(tmp_ivs, (int(box[2]), int(box[1])),
+                    #               (int(box[2] + box[4]), int(box[1] + box[3])),
+                    #               (int(255), int(255), int(255)), 2)
+                    cv2.rectangle(tmp_ivs, (int(box[1]), int(box[2])),
+                                  (int(box[1] + box[3]), int(box[2] + box[4])),
                                   (int(255), int(255), int(255)), 2)
+                    
 
         if str(t) in test_boxes:
             test = test_boxes[str(t)]
@@ -126,8 +130,12 @@ def obtain_mot_video(spikes, video_filename, res_filepath, **dataDict):
                 box = test[i]
                 box_id = box[0]
                 colors = color_dict[box_id]
-                cv2.rectangle(tmp_ivs, (int(box[2]), int(box[1])),
-                              (int(box[2] + box[4]), int(box[1] + box[3])),
+                # 下面的代码似乎x和y搞反了
+                # cv2.rectangle(tmp_ivs, (int(box[2]), int(box[1])),
+                #               (int(box[2] + box[4]), int(box[1] + box[3])),
+                #               (int(colors[0]), int(colors[1]), int(colors[2])), 2)
+                cv2.rectangle(tmp_ivs, (int(box[1]), int(box[2])),
+                              (int(box[1] + box[3]), int(box[2] + box[4])),
                               (int(colors[0]), int(colors[1]), int(colors[2])), 2)
 
         mov.write(tmp_ivs)
@@ -146,7 +154,6 @@ def obtain_detection_video(spikes, video_filename, res_filepath, evaluate_seq_le
         end_idx = begin_idx + evaluate_seq_len
         for seq_no in range(start_idx, end_idx):
             gt_filename = gt_file[seq_no]
-            print(gt_filename)
             gt_f = open(gt_filename, 'r')
 
             gt_lines = gt_f.readlines()

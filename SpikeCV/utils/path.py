@@ -1,7 +1,11 @@
-# -*- encoding: utf-8 -*-
-
+# -*- coding: utf-8 -*- 
+# @Time : 2023/7/16 20:19 
+# @Author : Yajing Zheng
+# @Email: yj.zheng@pku.edu.cn
+# @File : path.py
 # here put the import lib
 import os
+
 
 def seek_file(search_dirs, filename):
     search_dir_split = split_path_into_pieces(search_dirs)
@@ -18,6 +22,7 @@ def seek_file(search_dirs, filename):
                 filepath = os.path.join(root, filename)
                 return filepath
 
+
 def split_path_into_pieces(path: str):
     pieces = []
     if path[-1] == '/':
@@ -33,7 +38,7 @@ def split_path_into_pieces(path: str):
             break
         pieces.insert(0, splits[-1])
         path = splits[0]
-    
+
     return pieces
 
 def replace_identifier(path: list, src: str, dst: str):
@@ -43,5 +48,5 @@ def replace_identifier(path: list, src: str, dst: str):
         if piece == src:
             added_piece = dst
         new_path.append(added_piece)
-    
+
     return new_path

@@ -4,7 +4,14 @@
 # @File : visualize.py
 import cv2
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+
+import matplotlib.cm as cm
+import matplotlib.animation as animation
+
+# from previous version
 import json
 from pprint import pprint
 from mpl_toolkits.mplot3d import Axes3D
@@ -46,6 +53,8 @@ def obtain_mot_video(spikes, video_filename, res_filepath, **dataDict):
     gt_file = dataDict.get('labeled_data_dir')
     gt_boxes = {}
     if gt_file is not None:
+        if isinstance(gt_file, list):
+            gt_file = gt_file[0]
         gt_f = open(gt_file, 'r')
         gt_lines = gt_f.readlines()
         for line in gt_lines:
@@ -125,10 +134,37 @@ def obtain_mot_video(spikes, video_filename, res_filepath, **dataDict):
 
     mov.release()
 
-
-def obtain_detection_video(spikes, video_filename, res_filepath, **dataDict):
+# modified according to get_video in https://github.com/Zyj061/snnTracker
+def obtain_detection_video(spikes, video_filename, res_filepath, evaluate_seq_len, begin_idx=0, **dataDict):
     spike_h = dataDict.get('spike_h')
     spike_w = dataDict.get('spike_w')
+
+    gt_file = dataDict.get('labeled_data_dir')
+    gt_boxes = {}
+    if gt_file is not None:
+        start_idx = begin_idx
+        end_idx = begin_idx + evaluate_seq_len
+        for seq_no in range(start_idx, end_idx):
+            gt_filename = gt_file[seq_no]
+            print(gt_filename)
+            gt_f = open(gt_filename, 'r')
+
+            gt_lines = gt_f.readlines()
+            for line in gt_lines:
+                tmp_box = line.split(',')
+
+                x = float(tmp_box[0])
+                y = float(tmp_box[1])
+                w = float(tmp_box[2])
+                h = float(tmp_box[3])
+                box_id = int(0)
+
+                if str(seq_no) not in gt_boxes:
+                    gt_boxes[str(seq_no)] = []
+                bbox = [box_id, x, y, w, h]
+                gt_boxes[str(seq_no)].append(bbox)
+
+            gt_f.close()
 
     result_file = res_filepath
     test_boxes = {}
@@ -160,9 +196,23 @@ def obtain_detection_video(spikes, video_filename, res_filepath, **dataDict):
     mov = cv2.VideoWriter(video_filename, cv2.VideoWriter_fourcc(*'MJPG'), 30, (spike_w, spike_h))
 
     block_len = spikes.shape[0]
-    for t in range(150, block_len):
+    # gt_intv = int(block_len/evaluate_seq_len)
+    gt_intv = 400
+
+    # for t in range(150, block_len):
+    for i_gt in range(start_idx+1, end_idx):
+        t = i_gt * gt_intv + int(gt_intv/2)
         tmp_ivs = spikes[t, :, :] * 255
         tmp_ivs = cv2.cvtColor(tmp_ivs.astype(np.uint8), cv2.COLOR_GRAY2BGR)
+
+        if len(gt_boxes) > 0:
+            gts = gt_boxes[str(i_gt)]
+            gt_num = len(gts)
+            for i in range(gt_num):
+                box = gts[i]
+                cv2.rectangle(tmp_ivs, (int(spike_w - box[1]), int(box[2])),
+                              (int(spike_w - box[1] - box[3]), int(box[2] + box[4])),
+                              (int(255), int(255), int(255)), 2)
 
         if str(t) in test_boxes:
             test = test_boxes[str(t)]
@@ -178,6 +228,27 @@ def obtain_detection_video(spikes, video_filename, res_filepath, **dataDict):
         mov.write(tmp_ivs)
 
     mov.release()
+
+# add in according to get_video in https://github.com/Zyj061/snnTracker
+def get_heatVideo(results, video_filename):
+    results = np.array(results)
+    frame_num = results.shape[0]
+    frames = []
+
+    fig = plt.figure()
+    for i in range(frame_num):
+        tmp_res = results[i]
+        # frames.append([plt.imshow(tmp_res, cmap=cm.Greys_r, animated=True)])
+        frames.append([plt.imshow(tmp_res, cmap=cm.Blues, animated=True)])
+
+    ani = animation.ArtistAnimation(fig, frames, interval=50, blit=True,
+                                    repeat_delay=1000)
+
+    # change the path to where you save ffmpeg
+    plt.rcParams['animation.ffmpeg_path'] = 'F:\\ffmpeg-N-99818-g993429cfb4-win64-gpl-shared-vulkan\\bin\\ffmpeg.exe'
+    FFwrite = animation.FFMpegWriter(fps=30, extra_args=['-vcodec', 'libx264'])
+    ani.save(video_filename, writer=FFwrite)
+    plt.show()
 
 
 def vis_trajectory(box_file, json_file, filename, **dataDict):
@@ -226,9 +297,4 @@ def vis_trajectory(box_file, json_file, filename, **dataDict):
     ax.yaxis.set_major_locator(MultipleLocator(100))
     fig.subplots_adjust(top=1., bottom=0., left=0.2, right=1.)
     plt.show()
-
-
-
-
-
 

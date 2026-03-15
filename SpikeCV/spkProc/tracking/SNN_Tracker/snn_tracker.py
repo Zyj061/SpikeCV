@@ -68,7 +68,7 @@ class SNNTracker:
 
     def get_results(self, spikes, res_filepath, mov_writer=None, save_video=False):
 
-        result_file = open(res_filepath, 'a+')
+        result_file = open(res_filepath, 'w')  # 改为写入模式，避免累积重复数据
 
         timestamps = spikes.shape[0]
         total_time = 0

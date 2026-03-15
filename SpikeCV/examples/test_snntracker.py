@@ -117,9 +117,6 @@ if __name__ == "__main__":
     mov = cv2.VideoWriter(track_videoName, cv2.VideoWriter_fourcc(*'MJPG'), 30, (para_dict.get('spike_w'), para_dict.get('spike_h')))
     spike_tracker.get_results(spikes[calibration_time:], tracking_file, mov, save_video=True)
 
-    # trajectories_filename = os.path.join('results', data_name + '_py.json')
-    # visTraj_filename = os.path.join('results', data_name + '.png')
-
     spike_tracker.save_trajectory(RESULTS_DIR.as_posix(), data_name)
     vis_trajectory(trajectories_filename, visTraj_filename, **para_dict)
 
@@ -136,11 +133,5 @@ if __name__ == "__main__":
     print("tracking_file:", tracking_file)
 
     # visualize the tracking results to a video
-    video_filename = os.path.join('results', filename[-1] + '_ft_mot.avi')
-    obtain_mot_video(total_spikes, video_filename, tracking_file, **para_dict)
-    
-    # # 计算 evaluate_seq_len
-    # evaluate_seq_len = block_len - calibration_time
-    # video_filename = os.path.join('results', filename[-1] + '_dt_mot.avi')
-    
-    # obtain_detection_video(total_spikes, video_filename, tracking_file, evaluate_seq_len=evaluate_seq_len, **para_dict)
+    video_filename = os.path.join('results', filename[-1] + '_mot.avi')
+    obtain_mot_video(spikes, video_filename, tracking_file, **para_dict)

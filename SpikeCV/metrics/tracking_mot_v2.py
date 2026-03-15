@@ -26,84 +26,6 @@ def _coerce_single_path(x):
         return os.fspath(x[0])
     raise TypeError(f"gt_file must be str/PathLike or list/tuple thereof, got: {type(x)}")
 
-def unify_id_system(model_res, gt_df, verbose=True):
-    """
-    统一 model_res 和 ground truth 的 ID 系统
-    
-    Args:
-        model_res: 检测结果 DataFrame，包含多级索引 (FrameId, Id)
-        gt_df: Ground truth DataFrame，包含多级索引 (FrameId, Id)
-        verbose: 是否打印转换信息
-    
-    Returns:
-        转换后的 model_res DataFrame
-    """
-    if len(model_res) == 0:
-        return model_res
-    
-    model_ids = model_res.index.get_level_values('Id').unique()
-    gt_ids = gt_df.index.get_level_values('Id').unique()
-    
-    min_model_id = model_ids.min()
-    min_gt_id = gt_ids.min()
-    
-    # 情况 1：model 使用 0-based，gt 使用 1-based
-    if min_model_id == 0 and min_gt_id == 1:
-        if verbose:
-            print(f"检测到 ID 系统差异：model 使用 0-based，gt 使用 1-based")
-            print(f"  转换前 model ID 范围：{min_model_id} - {model_ids.max()}")
-            print(f"  GT ID 范围：{min_gt_id} - {gt_ids.max()}")
-        
-        offset = 1
-        new_index = [(frame_id, obj_id + offset) 
-                   for frame_id, obj_id in model_res.index]
-        model_res.index = pd.MultiIndex.from_tuples(new_index, names=['FrameId', 'Id'])
-        
-        if verbose:
-            new_ids = model_res.index.get_level_values('Id').unique()
-            print(f"  转换后 model ID 范围：{new_ids.min()} - {new_ids.max()}")
-    
-    # 情况 2：model 使用 1-based，gt 使用 0-based
-    elif min_model_id == 1 and min_gt_id == 0:
-        if verbose:
-            print(f"检测到 ID 系统差异：model 使用 1-based，gt 使用 0-based")
-            print(f"  转换前 model ID 范围：{min_model_id} - {model_ids.max()}")
-            print(f"  GT ID 范围：{min_gt_id} - {gt_ids.max()}")
-        
-        offset = -1
-        new_index = [(frame_id, obj_id + offset) 
-                   for frame_id, obj_id in model_res.index]
-        model_res.index = pd.MultiIndex.from_tuples(new_index, names=['FrameId', 'Id'])
-        
-        if verbose:
-            new_ids = model_res.index.get_level_values('Id').unique()
-            print(f"  转换后 model ID 范围：{new_ids.min()} - {new_ids.max()}")
-    
-    # 情况 3：ID 系统一致，但可能有偏移
-    elif min_model_id != min_gt_id:
-        offset = min_gt_id - min_model_id
-        if verbose:
-            print(f"检测到 ID 系统偏移：{offset}")
-            print(f"  转换前 model ID 范围：{min_model_id} - {model_ids.max()}")
-            print(f"  GT ID 范围：{min_gt_id} - {gt_ids.max()}")
-        
-        new_index = [(frame_id, obj_id + offset) 
-                   for frame_id, obj_id in model_res.index]
-        model_res.index = pd.MultiIndex.from_tuples(new_index, names=['FrameId', 'Id'])
-        
-        if verbose:
-            new_ids = model_res.index.get_level_values('Id').unique()
-            print(f"  转换后 model ID 范围：{new_ids.min()} - {new_ids.max()}")
-    
-    # 情况 4：ID 系统已经一致
-    else:
-        if verbose:
-            print(f"ID 系统一致，无需转换")
-            print(f"  Model ID 范围：{min_model_id} - {model_ids.max()}")
-            print(f"  GT ID 范围：{min_gt_id} - {gt_ids.max()}")
-    
-    return model_res
-
 def normalize_gt_to_csv(src_path, dst_path, expected_cols=10):
     # 读二进制并规范化：去 BOM、统一换行、去控制符
     raw = open(src_path, 'rb').read()
@@ -156,9 +78,6 @@ class TrackingMetrics:
         # self.gt = mm.io.loadtxt(self.gt_file, fmt="mot15-2D", min_confidence=0.5)
         self.gt = robust_load_gt(self.gt_file, fmt="mot16")  # due to the loadtxt bug, we need to adhere to mot16, the mod15-2D format is not supported
         model_res = mm.io.loadtxt(res_filepath, fmt="mot16") 
-        # might be a case when the model_res marked object id in forms like [0,1,2,...], while the ground truth marked object id in forms like [1,2,3,...]
-        # we need to ensure we've unify the object id in both gt and model_res before comparison
-        model_res = unify_id_system(model_res, self.gt, verbose=True)
 
         # 根据GT和自己的结果，生成accumulator，distth是距离阈值
         self.acc = mm.utils.compare_to_groundtruth(self.gt, model_res, 'iou', distth=0.6)

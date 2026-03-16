@@ -64,7 +64,7 @@ def robust_load_gt(gt_file, fmt="mot15-2D"):
 
     # C 引擎 + 明确逗号分隔，避免 regex 分隔导致引号失效
     _ = pd.read_csv(cleaned, header=None, engine='c')  # 触发一次严格解析，若有问题可直接报错定位
-    # The loadtxt bug: the load_motchallenge which handle the formatting mot15-2D, failed to 
+    # NOTE: the load_motchallenge which handle the formatting mot15-2D, failed to 
     # create a df with 12 columns, it create a 10 column df instead, which make the gt file not match the format with dt.
     gt = mm.io.loadtxt(cleaned, fmt=fmt, min_confidence=0.5, sep=",", engine="c", skipinitialspace=True)
     return gt
@@ -76,7 +76,7 @@ class TrackingMetrics:
     def __init__(self, res_filepath, **dataDict):
         self.gt_file = dataDict.get('labeled_data_dir')
         # self.gt = mm.io.loadtxt(self.gt_file, fmt="mot15-2D", min_confidence=0.5)
-        self.gt = robust_load_gt(self.gt_file, fmt="mot16")  # due to the loadtxt bug, we need to adhere to mot16, the mod15-2D format is not supported
+        self.gt = robust_load_gt(self.gt_file, fmt="mot16")  # NOTE: due to the loadtxt bug, we need to adhere to mot16, the mod15-2D format is not supported
         model_res = mm.io.loadtxt(res_filepath, fmt="mot16") 
 
         # 根据GT和自己的结果，生成accumulator，distth是距离阈值

@@ -1,3 +1,16 @@
+"""
+SpikeCV Utility Functions
+
+This module provides various utility functions for spike data processing,
+organized by functionality:
+
+- Data Processing: dataReader, downscale_input
+- Image Processing: get_kernel
+- Transform: get_transform_matrix, get_transform_matrix_new
+- Visualization: visualize_img, visualize_images, visualize_weights, vis_trajectory
+- Encoding: NumpyEncoder
+"""
+
 import sys
 import numpy as np
 import torch
@@ -9,6 +22,10 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.pyplot import MultipleLocator
 
+
+# ============================================================================
+# Data Processing
+# ============================================================================
 
 class dataReader(threading.Thread):
     def __init__(self, file_reader, device, q, is_dat=True, is_npy=False, filedir=None):
@@ -60,8 +77,47 @@ class dataReader(threading.Thread):
                 self.q.put(input_spk)
 
 
-# obtain 2D gaussian filter
+def downscale_input(spikes, scale_w, scale_h):
+    """
+    Downscale spike data spatially using simple slicing method
+    
+    Args:
+        spikes: Spike data array with shape (T, H, W) or (T, H, W, C)
+        scale_w: Width scaling factor, scale_w=2 means width reduced to half
+        scale_h: Height scaling factor, scale_h=2 means height reduced to half
+    
+    Returns:
+        Downscaled spike data
+    """
+    original_shape = spikes.shape
+    print(f"Starting downscaling: original shape {original_shape}, scale_w={scale_w}, scale_h={scale_h}")
+    
+    if len(spikes.shape) == 3:  # (T, H, W)
+        result = spikes[:, ::scale_h, ::scale_w]
+    elif len(spikes.shape) == 4:  # (T, H, W, C)
+        result = spikes[:, ::scale_h, ::scale_w, :]
+    else:
+        raise ValueError(f"Unsupported spikes shape: {spikes.shape}")
+    
+    print(f"Downscaling successful: {original_shape} -> {result.shape}")
+    return result
+
+
+# ============================================================================
+# Image Processing
+# ============================================================================
+
 def get_kernel(filter_size, sigma):
+    """
+    Obtain 2D gaussian filter
+    
+    Args:
+        filter_size: Size of the filter (must be odd number)
+        sigma: Standard deviation of the gaussian
+    
+    Returns:
+        2D gaussian filter kernel
+    """
     assert (filter_size + 1) % 2 == 0, '2D filter size must be odd number!'
     g = np.zeros((filter_size, filter_size), dtype=np.float32)
     half_width = int((filter_size - 1) / 2)
@@ -79,7 +135,21 @@ def get_kernel(filter_size, sigma):
     return g
 
 
+# ============================================================================
+# Transform Functions
+# ============================================================================
+
 def get_transform_matrix(ori, speed):
+    """
+    Generate transformation matrix for data augmentation
+    
+    Args:
+        ori: Orientation array
+        speed: Speed array
+    
+    Returns:
+        Transformation matrix tensor
+    """
     ori_num = len(ori)
     speed_num = len(speed)
     transform_matrix = torch.zeros(ori_num * speed_num, 2, 3)
@@ -99,6 +169,19 @@ def get_transform_matrix(ori, speed):
 
 
 def get_transform_matrix_new(ori, speed, dvs_w, dvs_h, device):
+    """
+    Generate transformation matrix with explicit dimensions
+    
+    Args:
+        ori: Orientation array
+        speed: Speed array
+        dvs_w: Width dimension
+        dvs_h: Height dimension
+        device: Target device for the tensor
+    
+    Returns:
+        Transformation matrix tensor
+    """
     ori_num = len(ori)
     speed_num = len(speed)
     transform_matrix = torch.zeros(ori_num * speed_num, 2, 3)
@@ -117,14 +200,33 @@ def get_transform_matrix_new(ori, speed, dvs_w, dvs_h, device):
     return transform_matrix
 
 
-# monitor the inference process
+# ============================================================================
+# Visualization Functions
+# ============================================================================
+
 def visualize_img(gray_img, tag, curT):
+    """
+    Monitor the inference process by visualizing single image
+    
+    Args:
+        gray_img: Grayscale image tensor
+        tag: Tag for the visualization
+        curT: Current timestamp
+    """
     gray_img = gray_img.float32()
     img = torch.unsqueeze(gray_img, 0)
     logger.add_image(tag, img, global_step=curT)
 
 
 def visualize_images(images, tag, curT):
+    """
+    Monitor the inference process by visualizing image sequence
+    
+    Args:
+        images: Image sequence tensor
+        tag: Tag for the visualization
+        curT: Current timestamp
+    """
     if images.shape[0] < 1:
         return
     images = torch.squeeze(images)
@@ -137,6 +239,14 @@ def visualize_images(images, tag, curT):
 
 
 def visualize_weights(weights, tag, curT):
+    """
+    Monitor the inference process by visualizing network weights
+    
+    Args:
+        weights: Network weights tensor
+        tag: Tag for the visualization
+        curT: Current timestamp
+    """
     if weights.shape[0] < 1:
         return
     weights = torch.squeeze(weights)
@@ -152,14 +262,15 @@ def visualize_weights(weights, tag, curT):
         logger.add_image(tag + str(iw), tmp_w, global_step=curT)
 
 
-class NumpyEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        return json.JSONEncoder.default(self, obj)
-
-
 def vis_trajectory(json_file, filename, **dataDict):
+    """
+    Visualize tracking trajectories in 3D
+    
+    Args:
+        json_file: Path to trajectory JSON file
+        filename: Output filename for the visualization
+        **dataDict: Additional data dictionary containing spike_h and spike_w
+    """
     spike_h = dataDict.get('spike_h')
     spike_w = dataDict.get('spike_w')
     traj_dict = []
@@ -202,7 +313,24 @@ def vis_trajectory(json_file, filename, **dataDict):
     fig.subplots_adjust(top=1., bottom=0., left=0.2, right=1.)
     # fig.tight_layout()
     
-    # 修复：在非交互式环境中不调用 plt.show()
-    # plt.show()
+    # NOTE: 由于非交互式环境中无法调用 plt.show(), 新增了savefig
     plt.savefig(filename, dpi=500, transparent=True)
+    plt.show()
     plt.close()
+
+
+# ============================================================================
+# Encoding Functions
+# ============================================================================
+
+class NumpyEncoder(json.JSONEncoder):
+    """
+    JSON encoder for numpy arrays
+    
+    This encoder converts numpy arrays to lists during JSON serialization,
+    enabling proper serialization of numpy data types.
+    """
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)

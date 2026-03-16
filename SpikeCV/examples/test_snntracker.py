@@ -3,6 +3,17 @@
 # @Author : Yajing Zheng
 # @Email: yj.zheng@pku.edu.cn
 # @File : test_snntracker.py
+
+'''
+A program for applying snnTracker on tracking task with different parameters setting
+Download the motVidarReal2025 spike dataset before running this program: https://github.com/Zyj061/snnTracker
+
+example:
+    python test_snntracker.py
+    python test_snntracker.py --scene_idx 0 --attention_size 15 --data_path motVidarReal2020/ --label_type tracking --metrics
+'''
+
+
 import argparse
 import cv2
 import os
@@ -11,20 +22,15 @@ import sys
 import torch
 import numpy as np
 from pprint import pprint
-sys.path.append("..")
-
 from spkProc.tracking.SNN_Tracker.snn_tracker import SNNTracker
 from spkData.load_dat import data_parameter_dict, SpikeStream
-from utils.utils import vis_trajectory
+from utils.utils import vis_trajectory, downscale_input
 from visualization.get_video import obtain_mot_video
-from visualization.get_video import obtain_detection_video
 from metrics.tracking_mot_v2 import TrackingMetrics
-
 import pathlib
 from pathlib import Path
 
-if __name__ == "__main__":
-
+def main():
     try:
         print("REMOTE_HOST_RUN:", os.uname().nodename)
     except AttributeError:
@@ -36,13 +42,14 @@ if __name__ == "__main__":
     RESULTS_DIR = SCRIPT_DIR / "results"
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--scene_idx", "-s", type=int, default=0)
-    parser.add_argument("--attention_size", "-attn_size", type=int, default=15)
+    parser = argparse.ArgumentParser(description=__doc__, 
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--scene_idx", "-s", type=int, default=0,help="Index of the test scene")
+    parser.add_argument("--attention_size", "-attn_size", type=int, default=15,help="Size of attention window")
 
-    parser.add_argument("--data_path", "-d", type=str, default="/root/autodl-fs/motVidarReal2020/")
-    parser.add_argument("--label_type", "-l", type=str, default="tracking")
-    parser.add_argument("--metrics", "-m", action="store_true")
+    parser.add_argument("--data_path", "-d", type=str, default="motVidarReal2020/",help="Path to dataset root")
+    parser.add_argument("--label_type", "-l", type=str, default="tracking",help="Label type")
+    parser.add_argument("--metrics", "-m", action="store_true",help="Enable quantitative metrics (requires GT)")
     args = parser.parse_args()
 
     # change the path to where you put the datasets
@@ -59,43 +66,18 @@ if __name__ == "__main__":
     block_len = 1000
     spikes = vidarSpikes.get_block_spikes(begin_idx=0, block_len=block_len)
     # spikes = vidarSpikes.get_spike_matrix()
-    #########################################
-    # downscale the input
-    #########################################
-    def downscale_input(spikes, scale_w, scale_h):
-        """
-        对脉冲数据进行空间下采样（最简单最快的切片方法）
-        
-        Args:
-            spikes: 脉冲数据数组，形状为 (T, H, W) 或 (T, H, W, C)
-            scale_w: 宽度缩放因子，scale_w=2表示宽度减为一半
-            scale_h: 高度缩放因子，scale_h=2表示高度减为一半
-        
-        Returns:
-            下采样后的脉冲数据
-        """
-        original_shape = spikes.shape
-        print(f"开始下采样: 原始形状 {original_shape}, 采样系数 scale_w={scale_w}, scale_h={scale_h}")
-        
-        if len(spikes.shape) == 3:  # (T, H, W)
-            result = spikes[:, ::scale_h, ::scale_w]
-        elif len(spikes.shape) == 4:  # (T, H, W, C)
-            result = spikes[:, ::scale_h, ::scale_w, :]
-        else:
-            raise ValueError(f"不支持的spikes形状: {spikes.shape}")
-        
-        print(f"下采样成功: {original_shape} -> {result.shape}")
-        return result
 
+    # downscale the input
     # Turn scaling off by default
+    # FIXME: 缩放后无法输出预期结果，可能是attention_size也要scaledown，以及后面输出的result要upscale回去
     scale_w = 1 #2
     scale_h = 1 #2
     spikes = downscale_input(spikes, scale_w, scale_h)
     para_dict['spike_w'] = para_dict.get('spike_w') // scale_w
     para_dict['spike_h'] = para_dict.get('spike_h') // scale_h
     pprint(spikes.shape)
-    #############################################
 
+    # TODO: 尚未测试在CUDA上是否正常运行
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     calibration_time = 150
@@ -133,5 +115,10 @@ if __name__ == "__main__":
     print("tracking_file:", tracking_file)
 
     # visualize the tracking results to a video
+    # TODO: 使用 tracker.filtered_spikes 来生成结果还没有测试
     video_filename = os.path.join('results', filename[-1] + '_mot.avi')
     obtain_mot_video(spikes, video_filename, tracking_file, **para_dict)
+    
+
+if __name__ == "__main__":
+    main()

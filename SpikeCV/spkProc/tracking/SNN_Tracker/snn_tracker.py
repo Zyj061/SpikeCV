@@ -24,9 +24,10 @@ from tqdm import tqdm
 
 trajectories = namedtuple('trajectories', ['id', 'x', 'y', 't', 'color'])
 
+# TODO: docstring
 class SNNTracker:
-
     def __init__(self, spike_h, spike_w, device, attention_size=20, diff_time=1, **STPargs):
+
         self.spike_h = spike_h
         self.spike_w = spike_w
         self.device = device

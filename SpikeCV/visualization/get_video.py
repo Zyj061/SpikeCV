@@ -53,6 +53,7 @@ def obtain_mot_video(spikes, video_filename, res_filepath, **dataDict):
     gt_file = dataDict.get('labeled_data_dir')
     gt_boxes = {}
     if gt_file is not None:
+        # NOTE: 这里的gt_file可能是一个list, 每个元素是一个gt文件
         if isinstance(gt_file, list):
             gt_file = gt_file[0]
         gt_f = open(gt_file, 'r')
@@ -114,7 +115,7 @@ def obtain_mot_video(spikes, video_filename, res_filepath, **dataDict):
                 for i in range(gt_num):
                     box = gts[i]
                     box_id = box[0]
-                    # 下面的代码似乎x和y搞反了
+                    # NOTE: bug fixed，下面的代码似乎x和y搞反了
                     # cv2.rectangle(tmp_ivs, (int(box[2]), int(box[1])),
                     #               (int(box[2] + box[4]), int(box[1] + box[3])),
                     #               (int(255), int(255), int(255)), 2)

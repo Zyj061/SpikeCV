@@ -253,12 +253,12 @@ python setup.py build_ext -i
 
 
 Spike-SORT多目标跟踪算法示例
-~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^
 
 对应的测试脚本为\ ``test_ssort.py``\ ，具体实现过程为：
 
 插入模块及数据加载
-^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
@@ -301,7 +301,7 @@ Spike-SORT多目标跟踪算法示例
    loading total spikes from dat file -- spatial resolution: 400 x 250, begin index: 0 total timestamp: 1000
 
 进行多目标跟踪并保存结果到文本文件
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~
 
 使用\ ``spkProc.tracking.spike_sort``\ 中的多目标跟踪器\ ``SpikeSORT``\ ，并且输出结果到\ ``txt``\ 文本文件中
 
@@ -330,7 +330,7 @@ Spike-SORT多目标跟踪算法示例
    Total tracking took: 4.090 seconds for 850 timestamps spikes
 
 结果度量及可视化
-^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
@@ -371,17 +371,17 @@ Spike-SORT多目标跟踪算法示例
    :target: ./media/spike59_filtered_mot.gif
    :alt: spike59_filtered_mot
 
-SNNTracker多目标跟踪算法示例
-~~~~~~~~~~~~~~~
 .. _snntracker-usage:
+
+SNNTracker多目标跟踪算法示例
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 我们提供了\ ``test_snntracker.py``\ 脚本以展示更完整的功能。
 
 此处只说明核心代码功能：
 
 插入模块及数据加载
-^^^^^^^^^^^^^^^^^^
-
+~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
@@ -427,7 +427,7 @@ SNNTracker多目标跟踪算法示例
    loading total spikes from dat file -- spatial resolution: 400 x 250, begin index: 0 total timestamp: 1000
 
 数据预处理
-^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~
 
 可以对加载的脉冲数据进行降采样处理，以减少计算量并提高处理速度：
 
@@ -443,7 +443,7 @@ SNNTracker多目标跟踪算法示例
 
 
 初始化SNNTracker
-^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~
 
 使用\ ``spkProc.tracking.SNN_Tracker.snn_tracker.SNNTracker``\ 初始化跟踪器，并设置相关参数：
 
@@ -464,7 +464,8 @@ SNNTracker多目标跟踪算法示例
 
 
 运动标定
-^^^^^^^^
+~~~~~~~~~~~~~~~~~~
+
 
 使用STP滤波器进行运动标定，以估计背景运动并提取前景目标：
 
@@ -479,7 +480,8 @@ SNNTracker多目标跟踪算法示例
 
 
 执行跟踪
-^^^^^^^^
+~~~~~~~~~~~~~~~~~~
+
 
 对整个数据序列进行多目标跟踪，并实时显示进度：
 
@@ -501,8 +503,16 @@ SNNTracker多目标跟踪算法示例
    mov.release()
    cv2.destroyAllWindows()
 
+
+* 实时跟踪视频输出
+
+.. image:: ./media/spike59_snn.gif
+   :target: ./media/spike59_snn.gif
+   :alt: spike59_snn
+
+
 轨迹可视化
-^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
@@ -515,8 +525,15 @@ SNNTracker多目标跟踪算法示例
 
    print(f"Trajectory visualization saved to: {trajectory_filename}")
 
+* 轨迹可视化结果
+
+.. image:: ./media/spike59_trajectory.png
+   :target: ./media/spike59_trajectory.png
+   :alt: spike59_trajectory
+
+
 结果度量
-^^^^^^^^
+~~~~~~~~~~~~~~~~~~
 
 使用\ ``metrics.tracking_mot_v2.TrackingMetrics``\ 对跟踪结果进行评估：
 
@@ -536,7 +553,7 @@ SNNTracker多目标跟踪算法示例
 
 
 视频可视化
-^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~
 
 使用\ ``visualization.get_video.obtain_mot_video``\ 生成跟踪结果视频：
 
@@ -555,24 +572,8 @@ SNNTracker多目标跟踪算法示例
    # 如果要在STP滤波后的脉冲阵列上可视化跟踪结果，可使用：
    # obtain_mot_video(tracker.filtered_spikes, video_filename, tracking_file, **para_dict)
 
-可视化结果示例
-^^^^^^^^^^^^^^^
-
-* 实时跟踪视频输出
-
-.. image:: ./media/spike59_snn.gif
-   :target: ./media/spike59_snn.gif
-   :alt: spike59_snn
-
 * 视频可视化结果
 
 .. image:: ./media/spike59_snn_mot.gif
    :target: ./media/spike59_snn_mot.gif
    :alt: spike59_snn_mot
-
-
-* 轨迹可视化结果
-
-.. image:: ./media/spike59_trajectory.png
-   :target: ./media/spike59_trajectory.png
-   :alt: spike59_trajectory

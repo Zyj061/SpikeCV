@@ -416,7 +416,7 @@ SNNTracker类中的函数
 使用示例
 ~~~~~~~~
 
-查看完整的使用示例，请参考：:ref:`_snntracker-usage`。
+查看完整的使用示例，请参考：:ref:`snntracker-usage <snntracker-usage>`
 
 
 相关论文

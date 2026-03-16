@@ -553,7 +553,7 @@ YourAlgorithm类中的函数
 使用示例
 ~~~~~~~~
 
-查看完整的使用示例，请参考：:ref:`your-algorithm-usage`。
+查看完整的使用示例，请参考：:ref:`alt-text <your-algorithm-usage>`。
 ```
 
 **推荐做法**：

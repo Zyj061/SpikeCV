@@ -65,7 +65,7 @@ tracking = [
 docs = [
     "sphinx",
     "sphinx-rtd-theme",
-    "myst-parser",
+    "recommonmark",
 ]
 
 # Testing

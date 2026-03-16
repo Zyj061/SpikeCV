@@ -11,7 +11,7 @@
 - [算法贡献流程](#算法贡献流程)
 - [代码结构要求](#代码结构要求)
 - [依赖管理](#依赖管理)
-- [文档要求](#文档要求)
+- [文档贡献](#文档贡献)
 - [提交 Pull Request](#提交-pull-request)
 - [代码审查流程](#代码审查流程)
 
@@ -56,7 +56,7 @@ SpikeCV/
 │   └── visualization/        # 可视化工具
 ```
 
-## suan'fa代码结构要求
+## 算法代码结构要求
 
 ### 1. 算法实现文件 (\*.py)
 
@@ -304,7 +304,10 @@ print('Demo completed successfully!')
 
 ## 依赖管理
 
-详细的依赖管理指南请参考：[`.github/CONTRIBUTING/dependency_guide.md`](.github/CONTRIBUTING/dependency_guide.md)
+
+### 项目环境管理
+
+关于 `pyproject.toml` 详细的依赖管理指南请参考：[`.github/CONTRIBUTING/dependency_guide.md`](.github/CONTRIBUTING/dependency_guide.md)
 
 该指南包含以下内容：
 
@@ -316,6 +319,75 @@ print('Demo completed successfully!')
 - 验证依赖的方法
 - 更新依赖的流程
 - 常见问题解答
+
+
+### 环境依赖记录
+
+为了避免"在我的电脑能跑"问题，我们强烈建议在提交 PR 前记录您的实际环境依赖：
+
+#### 1. 记录 Python 版本
+
+在您的算法文件夹中创建 `.python-version` 文件：
+
+```
+3.10
+```
+
+**说明**：
+
+- 该文件用于 pyenv 等版本管理工具
+- 确保其他开发者使用相同的 Python 版本
+- 避免因 Python 版本差异导致的问题
+
+#### 2. 记录依赖包版本
+
+在您的算法文件夹中运行以下命令：
+
+```bash
+pip freeze > requirement.txt
+```
+
+**说明**：
+
+- 该文件列出了您环境中所有已安装的包及其精确版本
+- 帮助其他开发者复现您的环境
+- 避免因依赖版本差异导致的问题
+
+**示例文件结构**：
+
+```
+SpikeCV/
+├── spkProc/
+│   └── tracking/
+│       └── SNN_Tracker/
+│           ├── .python-version      # Python 版本
+│           ├── requirement.txt      # 依赖包版本
+│           ├── snn_tracker.py     # 算法实现
+│           └── __init__.py
+```
+
+**使用方法**：
+
+其他开发者可以使用以下命令复现您的环境：
+
+```bash
+# 使用 .python-version 设置 Python 版本
+pyenv local 3.10
+
+# 使用 requirement.txt 安装依赖
+pip install -r requirement.txt
+
+# 或者使用 uv 进行快速安装
+uv pip install -r requirement.txt
+```
+
+**注意事项**：
+
+- `pip freeze` 会列出所有已安装的包，包括核心依赖和可选依赖
+- 如果您的算法有特殊的依赖需求，可以在 requirement.txt 中添加注释说明
+- 建议在虚拟环境中运行 `pip freeze`，避免包含系统级的包
+- 如果使用 conda，也可以使用 `conda env export > environment.yml` 导出环境
+- **虽然可以记录依赖包，但这只是方便 work around 和 环境依赖协调根据，我们建议所有的环境依赖都通过项目根目录的** **`pyproject.toml`** **统一管理，在项目初始化后您若有任何依赖项变化（新增/版本限制改变），应该在提交 PR 前更新 `pyproject.toml`**
 
 ## 文档贡献
 
@@ -416,7 +488,7 @@ YourAlgorithm类中的函数
 #. Author1, Author2, et al. Paper Title[C]//Conference Name. Year: pages.
 ```
 
-更多可以参考`核心操作.rst `  中的实际例子。
+更多可以参考`核心操作.rst `     中的实际例子。
 
 #### 文档要求
 

@@ -52,6 +52,7 @@ def main():
     parser.add_argument("--metrics", "-m", action="store_true",help="Enable quantitative metrics (requires GT)")
     args = parser.parse_args()
 
+    # TODO: 测试 no ground truth 的算法能否正确运行、可视化
     # change the path to where you put the datasets
     test_scene = ['spike59', 'rotTrans', 'cplCam', 'cpl1', 'badminton', 'ball', 'badminton-l1', 'badminton-l2', 'pingpong']
     # data_filename = 'motVidarReal2020/rotTrans'

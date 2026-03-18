@@ -1,2 +1,7 @@
 */__pycache__
 *.pyc
+*.avi
+*.egg-info
+datasets
+data
+results

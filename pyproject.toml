@@ -1,0 +1,84 @@
+[project]
+name = "SpikeCV"
+version = "0.1a"
+description = "An open-source framework for Spiking computer vision, which including datasets, algorithm libraries and software."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "einops",
+    "Imath",
+    "matplotlib",
+    "motmetrics",
+    "numpy<2.0",
+    "OpenEXR",
+    "Pillow",
+    "pyflow",
+    "PyYAML",
+    "scikit-learn",
+    "scipy",
+    "seaborn",
+    "setuptools",
+    "scikit-image",
+    "tensorboardX",
+    "timm",
+    "torch",
+    "torchvision",
+    "tqdm",
+    "lpips",
+    "pyiqa",
+    "colour-demosaicing"
+]
+authors = [
+    {name = "PKU, and other contributors", email = "yj.zheng@pku.edu.cn"}
+]
+urls = {repository = "https://git.openi.org.cn/Cordium/SpikeCV.git"}
+
+# Optional dependencies by algorithm type
+[project.optional-dependencies]
+# Reconstruction algorithms
+reconstruction = [
+]
+
+# Depth estimation algorithms
+depth_estimation = [
+]
+
+# Optical flow algorithms
+optical_flow = [
+]
+
+# Detection algorithms
+detection = [
+]
+
+# Recognition algorithms
+recognition = [
+]
+
+# Tracking algorithms
+tracking = [
+    "motmetrics>=1.2.0",
+    "filterpy>=1.4.0",
+]
+
+# Documentation
+docs = [
+    "sphinx",
+    "sphinx-rtd-theme",
+    "recommonmark",
+]
+
+# Testing
+test = [
+    "pytest>=7.0"
+]
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "SpikeCV"}
+
+[tool.setuptools.packages.find]
+where = ["SpikeCV"]

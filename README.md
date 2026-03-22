@@ -53,12 +53,23 @@ SpikeCV具体文档地址为：https://spikecv.readthedocs.io
 
 建议使用[Anaconda](https://www.anaconda.com/)创建专属于 `SpikeCV` 的使用环境
 
+<!-- why启智? -->
 ```bash
 # 从启智平台下载代码仓库
 git clone https://git.openi.org.cn/Cordium/SpikeCV.git 
 cd SpikeCV
 python setup.py install
 ```
+
+```bash
+# 从github下载代码仓库
+git clone https://github.com/Zyj061/SpikeCV.git 
+cd SpikeCV
+python install -e . # 开发模式
+```
+
+对于更精确的依赖包安装控制，请阅读 [可选依赖安装说明](https://github.com/Zyj061/SpikeCV/blob/main/.github/CONTRIBUTING/pyproject_usage.md#按功能模块安装)
+
 
 ### 数据集
 

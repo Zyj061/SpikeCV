@@ -1,4 +1,4 @@
-**注意**：目前是开发版本，部分用例尚未通过测试。
+**Note**: This is a development version, and some use cases have not yet passed testing.
 
 ![spikecv_logo](./docs/assets/spikecv_logo.png)
 
@@ -54,11 +54,20 @@ As shown in the figure above, SpikeCV mainly consists of three parts：
 We recommend using [Anaconda](https://www.anaconda.com/) to create an environment dedicated to `SpikeCV`
 
 ```bash
-# Download the code repository from the OpenI or github
+# Download the code repository from the OpenI platform
 git clone https://git.openi.org.cn/Cordium/SpikeCV.git 
 cd SpikeCV
 python setup.py install
 ```
+
+```bash
+# Download the code repository from GitHub
+git clone https://github.com/Zyj061/SpikeCV.git 
+cd SpikeCV
+python install -e . # Development mode
+```
+
+For more precise control over dependency installation, please read the [Optional Dependency Installation Guide](https://github.com/Zyj061/SpikeCV/blob/main/.github/CONTRIBUTING/pyproject_usage_en.md#Installing-by-Feature-Modules).
 
 ### Download Datasets
 

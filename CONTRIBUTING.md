@@ -1,5 +1,7 @@
 # Contributing to SpikeCV
 
+[English Version](./CONTRIBUTING_en.md)
+
 感谢您对 SpikeCV 项目的关注！我们欢迎以下形式的贡献：
 
 - **新算法**：添加新的脉冲视觉算法
@@ -35,7 +37,9 @@ git checkout -b feature/your-algorithm-name
 - Bug 修复：`fix/algorithm-bug-description`
 - 文档更新：`docs/algorithm-docs-update`
 
-### 3. 开发新算法
+### 3. 根据 `README.md` 下载依赖和配置环境
+
+### 4. 开发新算法
 
 在相应的模块目录下开发您的算法：
 
@@ -555,12 +559,6 @@ YourAlgorithm类中的函数
 
 查看完整的使用示例，请参考：:ref:`alt-text <your-algorithm-usage>`。
 ```
-
-**推荐做法**：
-
-- 在 `使用例子.rst` 中为每个算法 section 添加明确的锚点（如 `.. _your-algorithm-usage:`）
-- 在 `核心操作.rst` 中使用 `:ref:`your-algorithm-usage\`\` 引用
-- 这样即使文档结构变化，链接也能正常工作
 
 ## 提交 Pull Request
 

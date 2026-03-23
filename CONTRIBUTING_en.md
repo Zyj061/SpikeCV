@@ -1,5 +1,7 @@
 # Contributing to SpikeCV
 
+[中文版](./CONTRIBUTING.md)
+
 Thank you for your interest in the SpikeCV project! We welcome the following forms of contributions:
 
 - **New Algorithms**: Add new spike-based vision algorithms

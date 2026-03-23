@@ -1,5 +1,7 @@
 # Contributing to SpikeCV
 
+[English Version](./CONTRIBUTING_en.md)
+
 感谢您对 SpikeCV 项目的关注！我们欢迎以下形式的贡献：
 
 - **新算法**：添加新的脉冲视觉算法

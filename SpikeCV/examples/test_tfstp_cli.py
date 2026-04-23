@@ -71,8 +71,13 @@ def main(args=None):
     print(f"Running TFSTP reconstruction on {device_name}...")
     recImg = reconstructor.spikes2images_offline(spikes)
 
-    filename_parts = Path(args.dat_file_path).stem
-    result_video = (RESULTS_DIR / (filename_parts + '_tfstp.avi')).as_posix()
+    base_stem = Path(args.dat_file_path).stem + '_tfstp'
+    result_video_path = RESULTS_DIR / f"{base_stem}.avi"
+    counter = 1
+    while result_video_path.exists():
+        result_video_path = RESULTS_DIR / f"{base_stem}({counter}).avi"
+        counter += 1
+    result_video = result_video_path.as_posix()
 
     obtain_reconstruction_video(recImg, result_video, **paraDict)
     print(f"Reconstruction video saved to: {result_video}")

@@ -17,20 +17,21 @@ example:
 import argparse
 import cv2
 import os
-from utils import path
+from spikecv.utils import path
 import sys
 import torch
 import numpy as np
 from pprint import pprint
-from spkProc.tracking.SNN_Tracker.snn_tracker import SNNTracker
-from spkData.load_dat import data_parameter_dict, SpikeStream
-from utils.utils import vis_trajectory, downscale_input
-from visualization.get_video import obtain_mot_video
-from metrics.tracking_mot_v2 import TrackingMetrics
+from spikecv.spkProc.tracking.SNN_Tracker.snn_tracker import SNNTracker
+from spikecv.spkData.load_dat import data_parameter_dict, SpikeStream
+from spikecv.utils.utils import vis_trajectory, downscale_input
+from spikecv.visualization.get_video import obtain_mot_video
+from spikecv.metrics.tracking_mot_v2 import TrackingMetrics
 import pathlib
 from pathlib import Path
 
-def main():
+def main(args=None):
+        
     try:
         print("REMOTE_HOST_RUN:", os.uname().nodename)
     except AttributeError:
@@ -38,28 +39,34 @@ def main():
     print("CWD:", os.getcwd())
     print("FILE:", pathlib.Path(__file__).resolve())
     # 以脚本所在目录为根，保证稳定
-    SCRIPT_DIR = Path(__file__).resolve().parent
-    RESULTS_DIR = SCRIPT_DIR / "results"
+    # SCRIPT_DIR = Path(__file__).resolve().parent
+    # RESULTS_DIR = SCRIPT_DIR / "results"
+    # HACK: to work around with the cli(which we want result genrated in pwd), we deleted the forcing of Path(__file__)
+    RESULTS_DIR = Path("results")
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
-    parser = argparse.ArgumentParser(description=__doc__, 
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--scene_idx", "-s", type=int, default=0,help="Index of the test scene")
-    parser.add_argument("--attention_size", "-attn_size", type=int, default=15,help="Size of attention window")
+    if args is None:
+        parser = argparse.ArgumentParser(description=__doc__, 
+                                        formatter_class=argparse.RawDescriptionHelpFormatter)
+        parser.add_argument("--scene_idx", "-s", type=int, default=0,help="Index of the test scene")
+        parser.add_argument("--attention_size", "-attn_size", type=int, default=15,help="Size of attention window")
 
-    parser.add_argument("--data_path", "-d", type=str, default="motVidarReal2020/",help="Path to dataset root")
-    parser.add_argument("--label_type", "-l", type=str, default="tracking",help="Label type")
-    parser.add_argument("--metrics", "-m", action="store_true",help="Enable quantitative metrics (requires GT)")
-    args = parser.parse_args()
+        parser.add_argument("--data_path", "-d", type=str, default="motVidarReal2020/",help="Path to dataset root")
+        parser.add_argument("--label_type", "-l", type=str, default="tracking",help="Label type")
+        parser.add_argument("--metrics", "-m", action="store_true",help="Enable quantitative metrics (requires GT)")
+        args = parser.parse_args()
 
     # TODO: 测试 no ground truth 的算法能否正确运行、可视化
     # change the path to where you put the datasets
-    test_scene = ['spike59', 'rotTrans', 'cplCam', 'cpl1', 'badminton', 'ball', 'badminton-l1', 'badminton-l2', 'pingpong']
+    test_scene = ['spike59', 'rotTrans', 'cplCam', 'cpl1', 'ball', 'badminton', 'pingpong']
     # data_filename = 'motVidarReal2020/rotTrans'
     attention_size = args.attention_size
     data_name = test_scene[args.scene_idx]
     # 修复：直接指定数据文件路径，而不是目录路径
     data_filename = os.path.join(args.data_path, data_name)
+    if not os.path.exists(data_filename):
+        print(f"Error: Data file '{data_filename}' does not exist.")
+        raise Exception(f"Data file '{data_filename}' does not exist. Please check the data_path and scene_idx parameters.")
     para_dict = data_parameter_dict(data_filename, args.label_type)
     pprint(para_dict)
     vidarSpikes = SpikeStream(**para_dict)
@@ -103,11 +110,14 @@ def main():
     spike_tracker.save_trajectory(RESULTS_DIR.as_posix(), data_name)
     vis_trajectory(trajectories_filename, visTraj_filename, **para_dict)
 
+    metric_result_json = None
     if args.metrics:
         # measure the multi-object tracking performance
         print("Calculating metrics...")
         metrics = TrackingMetrics(tracking_file, **para_dict)
-        metrics.get_results()
+        metric_result = metrics.get_results() # for json output 
+        import json
+        metric_result_json = metric_result.to_dict(orient='index')
 
     # block_len = total_spikes.shape[0]
     mov.release()
@@ -119,7 +129,15 @@ def main():
     # TODO: 使用 tracker.filtered_spikes 来生成结果还没有测试
     video_filename = os.path.join('results', filename[-1] + '_mot.avi')
     obtain_mot_video(spikes, video_filename, tracking_file, **para_dict)
+    print("Video saved to:", video_filename)
     
+    return {
+        "tracking_result_file": str(tracking_file),
+        "tracking_video_file": track_videoName, # SNN追踪结果直接生成的视频
+        "trajectory_image_file": visTraj_filename,
+        "metrics": metric_result_json,
+        "mot_overlay_video_file": video_filename,  # Fused video overlaying GT, tracking results, and reconstructed spikes
+    }
 
 if __name__ == "__main__":
     main()

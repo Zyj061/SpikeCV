@@ -10,19 +10,17 @@ import cv2
 
 class TFSTP:
 
-    def __init__(self, spike_h, spike_w, device):
+    def __init__(self, spike_h, spike_w, device, stpPara: dict = dict()):
         self.spike_h = spike_h
         self.spike_w = spike_w
         self.device = device
 
         # parameters of the STP model
-        stpPara = {}
-        stpPara['u0'] = 0.15
-        stpPara['D'] = 0.05 * 20
-        stpPara['F'] = 0.5 * 20
-        stpPara['f'] = 0.15
-
-        stpPara['time_unit'] = 1
+        stpPara.setdefault('u0', 0.15)
+        stpPara.setdefault('D', 0.05 * 20)
+        stpPara.setdefault('F', 0.5 * 20)
+        stpPara.setdefault('f', 0.15)
+        stpPara.setdefault('time_unit', 1)
 
         self.stp_filter = STPFilter(self.spike_h, self.spike_w, device, **stpPara)
 

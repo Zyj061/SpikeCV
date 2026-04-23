@@ -1,5 +1,5 @@
 import typer
-from spikecv.cli import proc, data
+from SpikeCV.cli import proc, data
 from importlib.metadata import version as get_version
 
 def version_callback(value: bool):

@@ -73,10 +73,10 @@ pip install ".[cli]"
 pip install -e .
 ```
 
-或者若需要实时的
+你可以通过 CLI 下载数据集并执行算法处理。可通过以下命令查看全部可用 CLI 命令：
 
 ```bash
-pip install -e . # 开发模式
+spikecv --help
 ```
 
 对于更精确的依赖包安装控制，请阅读 [可选依赖安装说明](https://github.com/Zyj061/SpikeCV/blob/main/.github/CONTRIBUTING/pyproject_usage.md#按功能模块安装)

@@ -72,6 +72,12 @@ pip install ".[cli]"
 pip install -e .
 ```
 
+You can download datasets and run algorithm processing through the CLI. To view all available CLI commands, run:
+
+```bash
+spikecv --help
+```
+
 For more precise control over dependency installation, please read the [Optional Dependency Installation Guide](https://github.com/Zyj061/SpikeCV/blob/main/.github/CONTRIBUTING/pyproject_usage_en.md#Installing-by-Feature-Modules).
 
 ### Download Datasets

@@ -65,7 +65,18 @@ python setup.py install
 # 从github下载代码仓库
 git clone https://github.com/Zyj061/SpikeCV.git 
 cd SpikeCV
-python install -e . # 开发模式
+
+# 选项 A: 推荐使用方式（包含命令行工具 CLI 支持）
+pip install ".[cli]"
+
+# 选项 B: 开发者/贡献者安装方式（实时预览代码修改，暂不保证 CLI 路径兼容性）
+pip install -e .
+```
+
+或者若需要实时的
+
+```bash
+pip install -e . # 开发模式
 ```
 
 对于更精确的依赖包安装控制，请阅读 [可选依赖安装说明](https://github.com/Zyj061/SpikeCV/blob/main/.github/CONTRIBUTING/pyproject_usage.md#按功能模块安装)

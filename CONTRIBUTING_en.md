@@ -139,6 +139,7 @@ class YourAlgorithm:
 #### Code Style Suggestions
 
 - Follow PEP 8 code style
+- **Package Imports**: When importing built-in modules or algorithms of SpikeCV, strictly use absolute imports starting with `SpikeCV` or `spikecv` (e.g., `from spikecv.spkData import load_dat`). Do not use relative imports (like `from .. import`).
 - Add necessary comments and docstrings
 - Use type hints
 - Handle edge cases and errors
@@ -305,6 +306,75 @@ print('Demo completed successfully!')
 - Add detailed comments explaining each step
 - Ensure the code can run directly (provided the correct data is available)
 - Demonstrate the practical application effect of the algorithm
+
+## CLI Contribution Guidelines
+
+If you want to integrate your algorithm into SpikeCV's Command Line Interface (CLI) or submit improvements for CLI, please follow these guidelines. The CLI related code is located under the `SpikeCV/cli/` directory.
+
+### 1. File Location
+- Data processing commands: Modify `SpikeCV/cli/data.py`
+- Algorithm processing/execution commands: Modify `SpikeCV/cli/proc.py`
+
+### 2. Interface Design and Development Template
+We use `typer` to build a hierarchical CLI. If a category already has subcommands (e.g., `track`, `reconst`), add your algorithm command to the corresponding sub-Typer app:
+
+- Tracking Algorithms: Modify `SpikeCV/cli/cliProc/track.py`
+- Reconstruction Algorithms: Modify `SpikeCV/cli/cliProc/reconst.py`
+
+**Development Standards:**
+1. **Internal Imports**: Always import algorithm libraries inside the function to avoid startup latency.
+2. **Panel Grouping**: Use `rich_help_panel="Algorithms"` to categorize algorithm commands.
+3. **Agent Support**: Keep the `agent_used` parameter and JSON output logic.
+
+```python
+import typer
+
+# Add to the corresponding track.py or reconst.py
+@app.command(name="your-algo", 
+             help="Detailed description.", 
+             rich_help_panel="Algorithms")
+def your_algo(
+    data_path: str = typer.Option(..., "--data-path", "-d"),
+    agent_used: bool = typer.Option(False, "--agent-used", "-agent")
+):
+    import json
+    import sys
+    import contextlib
+    
+    # Mandatory requirement: Import algorithm libraries INSIDE the function 
+    # to avoid CLI startup latency caused by unnecessary package pre-loading.
+    # Also use internal absolute import starting with `SpikeCV` or `spikecv`:
+    # from spikecv.examples import your_run_script
+    
+    result_dict = {"status": "error", "message": "Unknown error", "result": None} 
+    err_msg = ""
+    try:
+        # Core CLI logic...
+        typer.echo("Running your task...", err=True)
+        
+        # Redirect standard output to stderr, ensuring stdout is only for pure structured output (e.g., if agent_used=True)
+        with contextlib.redirect_stdout(sys.stderr):
+            with contextlib.redirect_stderr(sys.stderr):
+                # result_dict["result"] = your_run_script.main(args)
+                pass
+                
+        result_dict.update({"status": "success", "message": "Done."})
+    except Exception as e:
+        final_msg = err_msg if err_msg else str(e)
+        result_dict.update({"status": "error", "message": final_msg})
+        typer.echo(final_msg, err=True)
+        if not agent_used:
+            raise typer.Exit(1)
+    finally:
+        if agent_used:
+            # Output structured JSON specifically tailored for agents on console explicitly at the end
+            typer.echo(json.dumps(result_dict))
+```
+
+### 3. PR Template Notes
+For CLI-related Pull Requests, please use the unified PR description template in the "Submitting a Pull Request" section below.
+
+If your PR includes CLI changes, complete the "CLI Checklist (if applicable)" section in that unified template and provide the related verification details.
 
 ## Dependency Management
 
@@ -631,6 +701,7 @@ git push origin feature/your-algorithm-name
 - [ ] New Algorithm
 - [ ] Algorithm Bug Fix
 - [ ] Documentation Improvement
+- [ ] CLI Feature Improvement
 
 ## PR Description
 Briefly describe your algorithm's functionality, core ideas, or the issues fixed.
@@ -643,6 +714,16 @@ Briefly describe your algorithm's functionality, core ideas, or the issues fixed
 - [ ] Updated usage_examples.rst
 - [ ] Added necessary image resources
 - [ ] Updated pyproject.toml dependencies (if required)
+- [ ] Added or modified CLI commands (if applicable)
+
+## CLI Checklist (if applicable)
+- [ ] Algorithm core library imports are placed inside functions (Lazy Load)
+- [ ] Intermediate outputs and progress bars are sent via `stderr` (e.g., `typer.echo(..., err=True)`, `tqdm(..., file=sys.stderr)`, or I/O redirection)
+- [ ] Structured JSON is output via `stdout` only when `agent_used` is True
+- [ ] Basic CLI functionality: Successfully ran `spikecv proc ...`
+- [ ] Error handling: Verified error messages for invalid paths or parameters
+- [ ] Device compatibility: Tested on [CPU/CUDA]
+- [ ] Agent mode: Verified structured JSON format with `--agent-used`
 
 ## Algorithm Validation
 Describe how you validated the algorithm's correctness:
@@ -652,6 +733,9 @@ Describe how you validated the algorithm's correctness:
 - Confirmed documentation completeness
 - Ensured usage example files run correctly
 - Tested different parameter configurations
+
+## CLI Test Command (if applicable)
+`spikecv proc your-cmd -d /path/to/data`
 
 ## Related Issues
 Link related issue numbers (if any).

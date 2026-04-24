@@ -64,7 +64,12 @@ python setup.py install
 # Download the code repository from GitHub
 git clone https://github.com/Zyj061/SpikeCV.git 
 cd SpikeCV
-python install -e . # Development mode
+
+# Option A: Recommended for users (including CLI support)
+pip install ".[cli]"
+
+# Option B: For developers/contributors (Real-time code updates, CLI compatibility is not guaranteed)
+pip install -e .
 ```
 
 For more precise control over dependency installation, please read the [Optional Dependency Installation Guide](https://github.com/Zyj061/SpikeCV/blob/main/.github/CONTRIBUTING/pyproject_usage_en.md#Installing-by-Feature-Modules).

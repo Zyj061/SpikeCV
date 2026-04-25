@@ -139,6 +139,7 @@ class YourAlgorithm:
 #### 代码风格建议
 
 - 遵循 PEP 8 代码风格
+- **包的导入**：导入 SpikeCV 内置模块或算法时，请务必以 `SpikeCV` 或 `spikecv` 开头进行绝对导入（例如：`from spikecv.spkData import load_dat`）。切勿使用相对导入（如 `from .. import`）。
 - 添加必要的注释和文档字符串
 - 使用类型提示（Type Hints）
 - 处理边界情况和错误
@@ -305,6 +306,74 @@ print('Demo completed successfully!')
 - 添加详细的注释说明每个步骤
 - 确保代码可以直接运行（在提供正确数据的前提下）
 - 展示算法的实际应用效果
+
+## CLI工具贡献规范
+
+如果您想将您的算法集成到 SpikeCV 的命令行工具（CLI）中，或提交关于 CLI 的改进，请遵循以下规范。CLI 相关代码位于 `SpikeCV/cli/` 目录下。
+
+### 1. 文件位置
+- 数据处理相关命令：修改 `SpikeCV/cli/data.py`
+- 算法执行相关命令：修改 `SpikeCV/cli/proc.py`
+
+### 2. 接口设计与开发模板
+我们使用 `typer` 库构建分级 CLI。如果该类别下已有子命令（如 `track`, `reconst`），请向对应的子 Typer 程序中添加算法命令：
+
+- 跟踪算法：修改 `SpikeCV/cli/proc/track.py`
+- 重构算法：修改 `SpikeCV/cli/proc/reconst.py`
+
+**开发规范：**
+1. **函数内部导入**：务必在函数内部导入算法库，避免启动延迟。
+2. **Panel 分组**：使用 `rich_help_panel="Algorithms"` 将算法命令归类。
+3. **Agent 支持**：保留 `agent_used` 参数及 JSON 输出逻辑。
+
+```python
+import typer
+
+# 在对应的 track.py 或 reconst.py 中添加
+@app.command(name="your-algo", 
+             help="Detailed description.", 
+             rich_help_panel="Algorithms")
+def your_algo(
+    data_path: str = typer.Option(..., "--data-path", "-d"),
+    agent_used: bool = typer.Option(False, "--agent-used", "-agent")
+):
+    import json
+    import sys
+    import contextlib
+    
+    # 强制要求：在函数内部导入算法库，以避免不必要的包预加载导致 CLI 启动延迟
+    # 同时使用 SpikeCV/spikecv 开头进行内部导入，如：
+    # from spikecv.examples import your_run_script
+    
+    result_dict = {"status": "error", "message": "Unknown error", "result": None} 
+    err_msg = ""
+    try:
+        # CLI 业务逻辑...
+        typer.echo("Running your task...", err=True)
+        
+        # 将标准输出重定向到 stderr，确保 stdout 仅用于纯净结构化数据返回（如 agent_used 时）
+        with contextlib.redirect_stdout(sys.stderr):
+            with contextlib.redirect_stderr(sys.stderr):
+                # result_dict["result"] = your_run_script.main(args)
+                pass
+                
+        result_dict.update({"status": "success", "message": "Done."})
+    except Exception as e:
+        final_msg = err_msg if err_msg else str(e)
+        result_dict.update({"status": "error", "message": final_msg})
+        typer.echo(final_msg, err=True)
+        if not agent_used:
+            raise typer.Exit(1)
+    finally:
+        if agent_used:
+            # 专为 agent 提供结构化 JSON 格式输出在控制台
+            typer.echo(json.dumps(result_dict))
+```
+
+### 3. PR 模板说明
+CLI 相关 Pull Request 请直接使用下方“提交 Pull Request”章节中的统一 PR 描述模板。
+
+如包含 CLI 改动，请在统一模板中的 “CLI 检查清单（如适用）” 部分勾选并补充对应验证信息。
 
 ## 依赖管理
 
@@ -633,6 +702,7 @@ git push origin feature/your-algorithm-name
 - [ ] 新算法
 - [ ] 算法 Bug 修复
 - [ ] 文档改进
+- [ ] CLI 功能改进
 
 ## PR描述
 简要描述您的算法功能、核心思想或修复的问题。
@@ -645,6 +715,16 @@ git push origin feature/your-algorithm-name
 - [ ] 更新了使用例子.rst
 - [ ] 添加了必要的图片资源
 - [ ] 更新了 pyproject.toml 依赖（如有需要）
+- [ ] 添加或修改了 CLI 命令（如有）
+
+## CLI 检查清单（如适用）
+- [ ] 算法核心库导入已放置在函数内部 (Lazy Load)
+- [ ] 中间过程输出、进度条均通过 `stderr` 输出（例如 `typer.echo(..., err=True)`、`tqdm(..., file=sys.stderr)` 或 I/O 重定向）
+- [ ] 仅在 `agent_used` 为 True 时，通过 `stdout` 输出结构化 JSON 结果
+- [ ] CLI 基本功能：通过 `spikecv proc ...` 成功运行
+- [ ] 异常处理：已测试路径不存在或参数错误时的报错提示
+- [ ] 设备兼容性：已在 [CPU/CUDA] 环境下验证
+- [ ] Agent 模式：通过 `--agent-used` 验证了 JSON 输出格式正确性
 
 ## 算法验证
 描述您如何验证算法的正确性：
@@ -654,6 +734,9 @@ git push origin feature/your-algorithm-name
 - 确认了文档的完整性
 - 确保使用示范文件可以正常运行
 - 测试了不同参数配置
+
+## CLI 测试命令（如适用）
+`spikecv proc your-cmd -d /path/to/data`
 
 ## 相关 Issue
 关联相关的 Issue 编号（如果有）。

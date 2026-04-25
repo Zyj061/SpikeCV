@@ -8,7 +8,8 @@ import warnings
 import ctypes
 
 sys.path.append('../device/spikevision/m1k40')
-from sdk import spikelinkapi as link
+from anyio import Path
+from spikecv.device.spikevision.m1k40.sdk import spikelinkapi as link
 
 import numpy as np
 import torch
@@ -19,7 +20,7 @@ import glob
 from .sps_parser import SPSParser
 
 sys.path.append("..")
-from utils import path
+from spikecv.utils import path
 import time
 import threading
 
@@ -36,11 +37,70 @@ LABEL_DATA_TYPE = {
     'bayer': 7
 }
 
+# HACK: another data_parameter_dict provide more flexible path solving for CLI
+def data_parameter_dict_cli(yaml_file_path, data_file_path, label_type):
+    try:
+        with open(yaml_file_path, 'r', encoding='utf-8') as fin:
+            configs = yaml.load(fin, Loader=yaml.FullLoader)
+    except TypeError as err:
+        print("Cannot find config file" + str(err))
+        raise err
+    try:
+        labeled_data_type = configs.get('labeled_data_type')
+        if LABEL_DATA_TYPE[label_type] not in labeled_data_type:
+            raise ValueError('there is no labeled data for this task in the this dataset')
+
+    except KeyError as exception:
+        print('ERROR! Task name does not exist')
+        print('Task name must be in %s' % LABEL_DATA_TYPE.keys())
+        raise exception
+
+    is_labeled = configs.get('is_labeled')
+
+    paraDict = {'spike_h': configs.get('spike_h'), 'spike_w': configs.get('spike_w')}
+    paraDict['filelist'] = None
+
+    if is_labeled:
+        paraDict['labeled_data_type'] = configs.get('labeled_data_type')
+        paraDict['labeled_data_suffix'] = configs.get('labeled_data_suffix')
+        paraDict['label_root_list'] = None
+        
+        from pathlib import Path
+        data_path_obj = Path(data_file_path).resolve()
+        data_dir = data_path_obj.parent
+        
+        pure_name = data_path_obj.stem
+        
+        # 将路径切片以配合 replace_identifier 的预期（虽然最好重构 replace_identifier，但目前先保持兼容）
+        path_pieces = list(data_path_obj.parts)
+        
+        label_pieces = path.replace_identifier(path_pieces, configs.get('data_field_identifier', ''),
+                                            configs.get('label_field_identifier', ''))
+        
+        # 核心修改：基于数据文件所在的目录推导标签路径，而不是硬编码 ..
+        # 假设数据在 A/B/C/input/data.dat，标签可能在 A/B/C/label/data.txt
+        # 我们使用 Path(label_pieces) 构建绝对路径
+        label_root = Path(*label_pieces)
+        
+        # 如果 replace_identifier 返回的是相对结构，则将其相对于数据目录的父目录或根目录进行解析
+        if not label_root.is_absolute():
+             # 尝试在数据文件同级或上级寻找
+             label_root = data_dir.parent / Path(*label_root.parts[-2:]) # 这是一个常见的推导逻辑示例
+
+        paraDict['labeled_data_dir'] = glob.glob(str(label_root) + '.' + paraDict['labeled_data_suffix'])[0]
+        filepath = data_file_path
+    else:
+        filepath = data_file_path
+
+    paraDict['filepath'] = filepath
+
+    return paraDict
+
+    
 
 # generate parameters dictionary according to labeled or not
 def data_parameter_dict(data_filename, label_type):
     filename = path.split_path_into_pieces(data_filename)
-
     if os.path.isabs(data_filename):
         file_root = data_filename
         if os.path.isdir(file_root):

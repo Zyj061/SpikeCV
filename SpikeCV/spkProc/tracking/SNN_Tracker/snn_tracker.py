@@ -10,13 +10,13 @@ import numpy as np
 import torch
 import matplotlib.pyplot as plt
 
-from spkProc.filters.stp_filters_torch import STPFilter
+from spikecv.spkProc.filters.stp_filters_torch import STPFilter
 # from filters import stpFilter
-from spkProc.detection.attention_select_v2 import SaccadeInput
-from spkProc.motion.motion_detection import motion_estimation
-from spkProc.detection.stdp_clustering import stdp_cluster
+from spikecv.spkProc.detection.attention_select_v2 import SaccadeInput
+from spikecv.spkProc.motion.motion_detection import motion_estimation
+from spikecv.spkProc.detection.stdp_clustering import stdp_cluster
 # from spkProc.detection.stdp_clustering_V2 import stdp_cluster
-from utils.utils import NumpyEncoder
+from spikecv.utils.utils import NumpyEncoder
 from collections import namedtuple
 import json
 import cv2

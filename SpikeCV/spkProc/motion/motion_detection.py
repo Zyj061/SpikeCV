@@ -1,4 +1,4 @@
-from utils.utils import get_kernel, get_transform_matrix_new, visualize_images
+from spikecv.utils.utils import get_kernel, get_transform_matrix_new, visualize_images
 # import kornia as tgm
 import numpy as np
 import torch.nn.functional as F

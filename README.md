@@ -155,11 +155,15 @@ wget -c SpikeCV数据集的网页链接 -O | tar -xz
 ## 引用方式
 
 ```bib
-@misc{SpikeCV,
-	title = {SpikeCV},
-	author = {Zheng, Yajing and Zhang, Jiyuan and Zhao Rui and Ding, Jianhao and Li, Jianing and Chen, Shiyan and Yu, Zhaofei, Huang, Tiejun and other contributors},
-	year = {2022},
-	howpublished = {\url{https://git.openi.org.cn/Cordium/SpikeCV.git}},
+@article{zheng2026spikecv,
+  title={SpikeCV: open a continuous computer vision era},
+  author={Zheng, Yajing and Zhang, Jiyuan and Zhao, Rui and Ding, Jianhao and Chen, Shiyan and Wu, Weijian and Xiong, Ruiqin and Yu, Zhaofei and Huang, Tiejun},
+  journal={Science China Information Sciences},
+  volume={69},
+  number={3},
+  pages={132106},
+  year={2026},
+  publisher={Springer}
 }
 ```
 

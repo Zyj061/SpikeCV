@@ -19,12 +19,12 @@ def main(args=None):
         parser = argparse.ArgumentParser(description="BSF Reconstruction Example")
         parser.add_argument(
             "--yaml_file_path", "-yaml", type=str,
-            default="recVidarReal2019/config.yaml",
+            default="datasets/recVidarReal2019/config.yaml",
             help="Path to dataset config yaml",
         )
         parser.add_argument(
             "--dat_file_path", "-dat", type=str,
-            default="recVidarReal2019/classA/car-100kmh.dat",
+            default="datasets/recVidarReal2019/classA/car-100kmh.dat",
             help="Path to spike .dat file",
         )
         parser.add_argument("--begin_idx", "-begin", type=int, default=500, help="Begin index of spikes")

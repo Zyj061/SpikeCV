@@ -4,15 +4,15 @@
 
 import os
 import sys
-
 import torch
 from pprint import pprint
+from pathlib import Path
 
 sys.path.append("..")
 
-from spkData.load_dat import SpikeStream, data_parameter_dict
-from spkProc.reconstruction.BSF_Recon.bsf_recon import BSFRecon, default_weight_path
-from visualization.get_video import obtain_reconstruction_video
+from spikecv.spkData.load_dat import SpikeStream, data_parameter_dict
+from spikecv.spkProc.reconstruction.BSF_Recon.bsf_recon import BSFRecon, default_weight_path
+from spikecv.visualization.get_video import obtain_reconstruction_video
 
 if __name__ == '__main__':
     data_filename = "recVidarReal2019/classA/car-100kmh"
@@ -37,6 +37,7 @@ if __name__ == '__main__':
         spike_w=paraDict["spike_w"],
         device=device,
         step=step,
+        weight_path=Path("../spkProc/reconstruction/BSF_Recon/pretrained/bsf.pth")
     )
 
     print("Running BSF reconstruction...")

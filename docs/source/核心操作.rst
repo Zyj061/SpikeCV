@@ -241,6 +241,112 @@ TFSTP类中的函数
 
    #. Chen S, et al. Self-Supervised Mutual Learning for Dynamic Scene Reconstruction of Spiking Camera[C]//International Joint Conferences on Artificial Intelligence Organization. 2022: 2859--2866. 
 
+基于脉冲发放率估计的盲锐化滤波重构算法BSF
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``spkProc.reconstruction.BSF_Recon.bsf_recon``\ 中包含脉冲相机图像重构（Spike Camera Image Reconstruction, SCIR）算法\ ``BSFRecon``\ （CVPR 2024）。其核心思想是针对脉冲流中光子泊松到达、电路热噪声及时钟量化效应导致的 **脉冲波动（Spike Fluctuations）** 问题进行分析与处理：利用 **差分脉冲发放时间（DSFT, Differential of Spike Firing Time）** 的 **倒数** 可对光强进行无偏估计这一发现，设计 **多阶DSFT融合模块（MODF, Multi-order DSFT Fusion）** 对脉冲流进行表征；再通过 **多粒度对齐模块（MGA, Multi-Granularity Alignment）** 在粗粒度（基于局部搜索策略的patch级交叉注意力）和细粒度（可变形卷积像素级对齐）两个层级上完成时序对齐，最终融合重构出清晰图像。
+
+使用BSF算法可先通过实例化\ ``spkProc.reconstruction.BSF_Recon.bsf_recon``\ 中的\ ``BSFRecon``\ 类，其采用的数据类型为 *pytorch* 的张量形式，初始化时需提供脉冲阵列的高度\ ``spike_h``\ 、宽度\ ``spike_w``\ 、处理器\ ``device``\ ，以及可选的预训练权重路径、窗口大小等参数。权重文件默认位于\ ``spkProc/reconstruction/BSF_Recon/pretrained/bsf.pth``\ ，也可通过\ ``weight_path``\ 参数指定。例如：
+
+.. code-block:: python
+
+   from spkProc.reconstruction.BSF_Recon.bsf_recon import BSFRecon, default_weight_path
+   import torch
+
+   device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+   reconstructor = BSFRecon(
+       spike_h=250,
+       spike_w=400,
+       device=device,
+       weight_path=str(default_weight_path()),  # 或指定自定义权重路径
+       window_size=61,
+       max_search_half_window=20,
+       step=3,
+       gamma=2.2,
+   )
+
+BSFRecon类中的变量
+~~~~~~~~~~~~~~~~~~
+
+``bsf_recon.py``\ 中BSF重构器对应的类\ ``BSFRecon``\ 具有以下几种变量：
+
+* ``spike_h``\ ：脉冲阵列高度
+* ``spike_w``\ ：脉冲阵列宽度
+* ``device``\ ：所使用的处理器类型，\ ``cpu``\ 或者\ ``cuda``
+* ``window_size``\ ：滑动窗口大小，默认为61帧
+* ``max_search_half_window``\ ：DSFT前向/后向搜索半径，默认为20
+* ``step``\ ：输出帧的时间步长，默认为3（即每隔3帧输出一个重构结果）
+* ``gamma``\ ：Gamma校正因子，默认为2.2
+
+BSFRecon类中的函数
+~~~~~~~~~~~~~~~~~~
+
+``bsf_recon.BSFRecon``\ 中包含以下函数：
+
+#.
+   ``__init__(spike_h, spike_w, device, weight_path=None, window_size=61, max_search_half_window=20, step=1, gamma=2.2)``\ ：初始化BSFRecon实例。
+
+   参数说明：
+
+   * ``spike_h``\ ：脉冲阵列高度
+   * ``spike_w``\ ：脉冲阵列宽度
+   * ``device``\ ：处理器类型，\ ``cpu``\ 或者\ ``cuda``
+   * ``weight_path``\ ：BSF预训练权重路径，默认为\ ``default_weight_path()``\ 返回的路径
+   * ``window_size``\ ：滑动窗口大小，默认61
+   * ``max_search_half_window``\ ：DSFT搜索半径，默认20
+   * ``step``\ ：输出帧时间步长，默认1
+   * ``gamma``\ ：Gamma校正因子，默认2.2
+
+   .. code-block:: python
+
+      from spkProc.reconstruction.BSF_Recon.bsf_recon import BSFRecon
+      import torch
+
+      device = torch.device('cuda')
+      reconstructor = BSFRecon(spike_h=250, spike_w=400, device=device)
+
+#.
+   ``spikes2images(spikes, show_progress=True)``\ ：将脉冲序列重构为可见图像。
+
+   参数说明：
+
+   * ``spikes``\ ：输入脉冲序列，维度\ ``(T, spike_h, spike_w)``\ ，数据类型为 *numpy.ndarray* 或 *bool* 数组
+
+   返回值：
+
+   * ``np.ndarray``\ ：重构的灰度图像序列，维度\ ``(N, spike_h, spike_w)``\ ，数据类型为 *uint8*，其中\ ``N``\ 为重构帧数，\ ``spike_h``\ 和\ ``spike_w``\ 为原始脉冲阵列的空间尺寸（算法内部会将空间尺寸 pad 至16的倍数以兼容模型，完成后裁回原始尺寸）
+
+   .. code-block:: python
+
+      import numpy as np
+      # spikes: (T, 250, 400) numpy array
+      rec_frames = reconstructor.spikes2images(spikes)
+      print(rec_frames.shape)  # e.g., (N, 248, 400)
+
+.. note::
+
+   BSF算法对输入脉冲序列的长度有最低要求：\ ``block_len >= 2 * max_search_half_window + 2 * (window_size // 2)``\ 。对于默认参数，需要至少101帧输入才能输出有效结果。此外，算法内部会将空间尺寸 pad 至16的倍数以适配模型，完成后裁回原始尺寸。
+
+使用示例
+~~~~~~~~
+
+查看完整的使用示例，请参考：:ref:`bsf-usage <bsf-usage>`。
+
+.. image:: ./media/car-100kmh_bsf.gif
+   :target: ./media/car-100kmh_bsf.gif
+   :alt: BSF 重构效果展示
+   :width: 500
+
+
+
+相关论文
+~~~~~~~~
+
+更多关于BSF重构算法的细节可参考论文：
+
+#. Zhao R, Xiong R, Zhao J, Zhang J, Fan X, Yu Z, Huang T. Boosting Spike Camera Image Reconstruction from a Perspective of Dealing with Spike Fluctuations[C]//CVPR. 2024.
+
+
 光流估计
 --------
 

@@ -15,8 +15,13 @@ from spikecv.spkProc.reconstruction.BSF_Recon.dsft_convert import convert_dsft4
 
 
 def default_weight_path():
-    """Return the default path for BSF pretrained weights."""
-    return Path(__file__).resolve().parent / "pretrained" / "bsf.pth"
+    """Return the default path for BSF pretrained weights.
+
+    Resolved relative to the current working directory, assuming the user
+    runs from the SpikeCV/SpikeCV root directory. For pip-installed usage,
+    pass an explicit weight_path or set the working directory accordingly.
+    """
+    return Path("./spkProc/reconstruction/BSF_Recon/pretrained/bsf.pth")
 
 
 def resolve_weight_path(weight_path=None):
@@ -25,7 +30,7 @@ def resolve_weight_path(weight_path=None):
         weight_path = default_weight_path()
     weight_path = Path(weight_path)
     if not weight_path.exists():
-        download_hint = weight_path.parent / "download_link.txt"
+        download_hint = "SpikeCV/SpikeCV/spkProc/reconstruction/BSF_Recon/pretrained/download_link.txt"
         raise FileNotFoundError(
             f"BSF pretrained weights not found at '{weight_path}'. "
             f"Please download weights and place them there. "

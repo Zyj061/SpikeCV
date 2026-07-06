@@ -8,4 +8,4 @@ SpikeCV: An open-source framework for Spiking Computer Vision.
 """
 import sys
 # both `spikecv` and `SpikeCV` can be the import package name
-sys.modules["spikecv"] = sys.modules[__name__]
+sys.modules["spikecv"] = sys.modules["SpikeCV"]

@@ -1,0 +1,15 @@
+BSF pretrained weights (bsf.pth)
+
+The BSF reconstruction algorithm requires pretrained weights trained on REDS120fps.
+
+Download options:
+1. Official BSF repository checkpoint: place the file as bsf.pth in this directory.
+   Repository: https://github.com/rui19910608/BSF (see README for ckpt/bsf.pth)
+2. Baidu NetDisk (password: 2728) linked in the BSF paper repository README.
+
+After download, the expected path is:
+  SpikeCV/spkProc/reconstruction/BSF_Recon/pretrained/bsf.pth
+
+Paper:
+  Rui Zhao et al., "Boosting Spike Camera Image Reconstruction from a Perspective
+  of Dealing with Spike Fluctuations", CVPR 2024.

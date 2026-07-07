@@ -90,3 +90,69 @@ def tfstp(
     finally:
         if agent_used:
             typer.echo(json.dumps(result_dict))
+
+@app.command(
+    name="bsf",
+    help="Run reconstruction using BSF (requires pretrained weights).",
+    short_help="BSF",
+    no_args_is_help=False,
+    rich_help_panel="Algorithms",
+)
+def bsf(
+    yaml_file_path: str = typer.Option("recVidarReal2019/config.yaml", "--yaml-file-path", "-yaml", help="Path to spike dataset yaml file"),
+    dat_file_path: str = typer.Option("recVidarReal2019/classA/car-100kmh.dat", "--dat-file-path", "-dat", help="Path to spike data file"),
+    begin_idx: int = typer.Option(500, "--begin-idx", "-begin", help="Begin index of spikes"),
+    block_len: int = typer.Option(300, "--block-len", "-b", help="Number of spike frames to process"),
+    weight_path: str = typer.Option("", "--weight-path", "-w", help="Path to BSF pretrained weights (.pth); default uses bundled pretrained/bsf.pth"),
+    step: int = typer.Option(3, "--step", help="Temporal step between reconstructed frames"),
+    window_size: int = typer.Option(61, "--window-size", help="Sliding window size"),
+    max_half_win: int = typer.Option(20, "--max-half-win", help="Half window for DSFT max search"),
+    gamma: float = typer.Option(2.2, "--gamma", help="Gamma correction factor"),
+    agent_used: bool = typer.Option(False, "--agent-used", "-agent", help="Whether this command is called by an agent"),
+):
+    import json
+    import os
+    import sys
+    from argparse import Namespace
+    import contextlib
+    from spikecv.examples import test_bsf_cli as bsf_impl
+
+    result_dict = {"status": "error", "message": "Unknown error", "result": None}
+    err_msg = ""
+    try:
+        typer.echo("Running the BSF reconstruction module of SpikeCV...", err=True)
+
+        if not os.path.isabs(yaml_file_path):
+            yaml_file_path = os.path.abspath(yaml_file_path)
+
+        args = Namespace(
+            yaml_file_path=yaml_file_path,
+            dat_file_path=dat_file_path,
+            begin_idx=begin_idx,
+            block_len=block_len,
+            weight_path=weight_path or None,
+            step=step,
+            window_size=window_size,
+            max_half_win=max_half_win,
+            gamma=gamma,
+        )
+
+        with contextlib.redirect_stdout(sys.stderr):
+            with contextlib.redirect_stderr(sys.stderr):
+                result_dict["result"] = bsf_impl.main(args)
+
+        result_dict.update({
+            "status": "success",
+            "message": "BSF reconstruction module ran successfully.",
+        })
+
+    except (Exception, SystemExit) as e:
+        final_msg = err_msg if err_msg else str(e)
+        result_dict.update({"status": "error", "message": final_msg})
+        typer.echo(final_msg, err=True)
+        if not agent_used:
+            raise typer.Exit(1)
+
+    finally:
+        if agent_used:
+            typer.echo(json.dumps(result_dict))

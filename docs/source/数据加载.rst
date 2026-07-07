@@ -224,6 +224,124 @@ Spike支持数据集拥有多级目录，且有较高自由度的数据放置形
   * 
     ``delete_if_exists``\ 默认为True，检查若\ ``save_path``\ 已经存在则删除原文件后保存新文件。
 
+自行拍摄的数据
+----------------
+
+上文介绍的\ ``data_parameter_dict``\ 与\ ``config.yaml``\ 机制主要面向 SpikeCV 开源数据集。若您使用脉冲相机自行采集数据并导出为\ ``.dat``\ 文件，通常没有现成的配置文件，需要根据相机型号与编码格式手动指定参数。SpikeCV 在\ ``examples``\ 目录下提供了两个参考脚本：
+
+* ``test_load.py``\ ：标准分辨率（如\ ``250×400``\ ）脉冲数据的读取示例
+* ``test_load_sps100.py``\ ：百万像素级（\ ``1000×1000``\ ）脉冲数据的读取示例
+
+标准分辨率数据（sps10 编码）
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+第一代脉冲相机及 SpikeCV 开源数据集中常见的分辨率为\ ``250×400``\ ，\ ``.dat``\ 文件按行扫描、每 8 个像素比特打包为一个字节存储。若数据目录结构与开源数据集一致（含\ ``config.yaml``\ ），可像上文一样通过\ ``data_parameter_dict``\ 获取参数字典；若仅有裸\ ``.dat``\ 文件，则需手动构造\ ``paraDict``\ 并传入\ ``SpikeStream``\ 。
+
+完整用法可参考\ ``SpikeCV/examples/test_load.py``\ 。其核心步骤如下：
+
+.. code-block:: python
+
+   from spkData.load_dat import data_parameter_dict, SpikeStream
+
+   # 方式一：数据已按开源数据集目录放置，且存在 config.yaml
+   data_filename = "motVidarReal2020/spike59"
+   label_type = "tracking"
+   paraDict = data_parameter_dict(data_filename, label_type)
+
+   # 方式二：仅有一个 .dat 文件，手动指定分辨率与路径
+   paraDict = {
+       'filepath': '/path/to/your/spikes.dat',
+       'spike_h': 250,
+       'spike_w': 400,
+   }
+
+   vidarSpikes = SpikeStream(**paraDict)
+   spikes = vidarSpikes.get_block_spikes(begin_idx=0, block_len=1500)
+
+读取得到的脉冲矩阵形状为\ ``(T, spike_h, spike_w)``\ ，其中\ ``T``\ 为时间步（脉冲帧数）。
+
+百万像素数据（sps100 / PCIE 编码）
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+百万像素级脉冲相机（如\ **Spike M1K40-H2-Gen3**\ 等 M1K40 系列）导出的\ ``.dat``\ 文件通常采用 **sps100** 编码：有效成像区域为\ ``1000×1000``\ ，但文件中每行实际存储\ ``1024``\ 个像素位（含硬件填充列），且每帧带有帧头信息。对此类数据，需使用\ ``SpikeStream``\ 的 **PCIE** 模式读取。
+
+完整用法请参考\ ``SpikeCV/examples/test_load_sps100.py``\ ：
+
+.. code-block:: python
+
+   from spkData.load_dat import SpikeStream
+
+   filename = "/path/to/your/merged.dat"   # 自行拍摄导出的 .dat 绝对路径
+
+   decode_width = 1024   # 文件中每行解码宽度（含无效列）
+   spike_width = 1000    # 有效脉冲阵列宽度
+   height = 1000         # 有效脉冲阵列高度
+
+   paraDict = {
+       'decode_width': decode_width,
+       'spike_width': spike_width,
+       'height': height,
+       'filepath': filename,
+   }
+
+   vidarSpikes = SpikeStream(offline=True, camera_type='PCIE', **paraDict)
+
+   block_len = 1000
+   spikes = vidarSpikes.get_file_matrix(begin_idx=0, block_len=block_len)
+   print(spikes.shape)   # (1000, 1000, 1000)
+
+上述参数中，\ ``decode_width``\ 、\ ``spike_width``\ 与\ ``height``\ 需与导出时的相机设置一致；若不确定，可先参考同型号相机的官方说明或\ ``test_load_sps100.py``\ 中的默认值。\ **M1K40 系列相机很可能采用 sps100 编码**\ ，但不同固件版本可能存在差异，请以实际导出文件为准。
+
+.. note::
+
+   在线从相机实时采集（而非读取离线\ ``.dat``\ ）时，可参考\ ``examples/test_device.py``\ 与\ :doc:`硬件接口`\ 中的 Spike Link Input API 说明。
+
+可能的解码后处理问题
+^^^^^^^^^^^^^^^^^^^^
+
+\ ``SpikeStream``\ 的\ ``get_file_matrix``\ 在 PCIE 模式下会通过\ ``SPSParser``\ 定位帧头并解码比特流，\ **正常情况下不应出现帧头未跳过或象限错位**\ 。但在部分 M1K40 系列相机导出的\ ``.dat``\ 上，\ **仍有可能**（并非所有用户、所有文件都会出现）遇到以下两类问题：
+
+#. **右侧硬件检测条**：重建或可视化结果右缘出现黑白噪声状竖条，系 sps100 编码中每行\ ``24``\ 个无效列（左半区\ ``500–511``\ 、右半区\ ``1012–1023``\ ）未被完全剔除所致。
+#. **画面方向颠倒**：图像上下与真实场景相反。
+
+下面是一段使用\ ``SpikeStream``\ 标准 PCIE 解码、\ **未做额外后处理**\ 的重建效果示例（Spike M1K40-H2-Gen3 自采数据，可见右侧噪声条与方向问题）：
+
+.. image:: ./media/infer_bsf_without_postedit.gif
+   :alt: infer_bsf_without_postedit
+
+若出现上述现象，可在\ ``get_file_matrix``\ 返回的脉冲矩阵上自行做后处理。完整示例如下：
+
+.. code-block:: python
+
+   import numpy as np
+   from spkData.load_dat import SpikeStream
+
+   filename = "/path/to/your/merged.dat"
+   decode_width, spike_width, height = 1024, 1000, 1000
+   paraDict = {
+       'decode_width': decode_width,
+       'spike_width': spike_width,
+       'height': height,
+       'filepath': filename,
+   }
+
+   vidarSpikes = SpikeStream(offline=True, camera_type='PCIE', **paraDict)
+   spikes = vidarSpikes.get_file_matrix(begin_idx=0, block_len=1000)
+
+   # --- 可选后处理（按需启用）---
+
+   # 1. 剔除 sps100 无效列（每行共 24 列）
+   delete_cols = np.hstack([np.arange(500, 512), np.arange(1012, 1024)])
+   if spikes.shape[2] == decode_width:
+       spikes = np.delete(spikes, delete_cols, axis=2)
+
+   # 2. 垂直翻转，修正画面上下颠倒
+   spikes = np.flip(spikes, axis=1)
+
+   print(spikes.shape)   # (1000, 1000, 1000)
+
+若画面正常，则无需上述后处理。建议先使用\ ``obtain_spike_video``\ 对脉冲流做可视化，确认解码正确后再接入重构或下游算法。
+
 光流数据集
 ----------
 

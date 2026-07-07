@@ -178,19 +178,119 @@ SSML重构算法
 
 SRR超分重构算法
 ^^^^^^^^^^^^^
+
 ``example``\ 中的\ ``test_SRR.py``\ 提供了\ ``SRR_moedl``\ 网络测试的样例。
 
 本算法需要安装 Pyflow（https://github.com/pathak22/pyflow）依赖库，用于计算光流。
 
 克隆仓库后，执行以下命令：（对于Windows系统，还需要将pyflow/src/project.h中的 #define _LINUX_MAC 语句注释掉。）
 
-cd pyflow/
+.. code-block:: bash
 
-python setup.py build_ext -i
+   cd pyflow/
+   python setup.py build_ext -i
 
 随后将生成的.pyd文件（Windows系统）或.so文件（Linux系统）复制到工作目录下。
 
 测试时，直接读取.dat文件，截取240个时间步送入预训练网络，即可生成超分图。
+
+.. _bsf-usage:
+
+BSF重构算法
+^^^^^^^^^^^^^
+
+使用\ ``recVidarReal2019``\ 数据集中的汽车高速行驶场景序列\ ``car-100kmh``\ 进行重构，对应的测试脚本为\ ``examples/test_bsf.py``\（直接运行方式）及\ ``spikecv proc reconst bsf``\（CLI方式）。以下分别介绍两种使用方式。
+
+直接脚本调用
+~~~~~~~~~~~~~~
+
+首先确保BSF预训练权重已放置在正确位置（\ ``spkProc/reconstruction/BSF_Recon/pretrained/bsf.pth``\）。然后在\ ``examples/``\ 目录下运行：
+
+.. code-block:: python
+
+   import os
+   import sys
+   sys.path.append("..")
+
+   import torch
+   from pprint import pprint
+   from spkData.load_dat import SpikeStream, data_parameter_dict
+   from spkProc.reconstruction.BSF_Recon.bsf_recon import BSFRecon, default_weight_path
+   from visualization.get_video import obtain_reconstruction_video
+
+   data_filename = "recVidarReal2019/classA/car-100kmh"
+   label_type = "raw"
+   begin_idx = 500
+   block_len = 300
+   step = 3
+
+   paraDict = data_parameter_dict(data_filename, label_type)
+   pprint(paraDict)
+
+   vidarSpikes = SpikeStream(**paraDict)
+   spikes = vidarSpikes.get_block_spikes(begin_idx=begin_idx, block_len=block_len)
+
+   device_name = "cuda" if torch.cuda.is_available() else "cpu"
+   device = torch.device(device_name)
+   print(f"Using device: {device_name}")
+   print(f"Expected weight path: {default_weight_path()}")
+
+   reconstructor = BSFRecon(
+       spike_h=paraDict["spike_h"],
+       spike_w=paraDict["spike_w"],
+       device=device,
+       step=step,
+   )
+
+   print("Running BSF reconstruction...")
+   rec_img = reconstructor.spikes2images(spikes)
+   print(f"Reconstructed frames shape: {rec_img.shape}")
+
+   if not os.path.exists("results"):
+       os.makedirs("results")
+
+   result_video = os.path.join("results", "car-100kmh_bsf.avi")
+   obtain_reconstruction_video(rec_img, result_video, **paraDict)
+   print(f"Reconstruction video saved to: {result_video}")
+
+CLI调用
+~~~~~~~~~~~~~~
+
+使用CLI方式调用BSF重构更为简洁，无需编写脚本。首先下载数据集：
+
+.. code-block:: bash
+
+   spikecv data download --dataset recVidarReal2019
+
+然后运行BSF重构：
+
+.. code-block:: bash
+
+   spikecv proc reconst bsf \
+       --yaml-file-path recVidarReal2019/config.yaml \
+       --dat-file-path recVidarReal2019/classA/car-100kmh.dat \
+       --begin-idx 500 \
+       --block-len 300 \
+       --step 3
+
+CLI参数说明：
+
+* ``--yaml-file-path / -yaml``\ ：数据集配置文件路径，默认\ ``recVidarReal2019/config.yaml``
+* ``--dat-file-path / -dat``\ ：脉冲数据文件路径，默认\ ``recVidarReal2019/classA/car-100kmh.dat``
+* ``--begin-idx / -begin``\ ：起始帧索引，默认500
+* ``--block-len / -b``\ ：处理的帧数，默认300（注意：至少需要101帧才能输出有效结果）
+* ``--weight-path / -w``\ ：预训练权重路径，默认使用\ ``spkProc/reconstruction/BSF_Recon/pretrained/bsf.pth``
+* ``--step``\ ：输出帧时间步长，默认3
+* ``--window-size``\ ：滑动窗口大小，默认61
+* ``--gamma``\ ：Gamma校正因子，默认2.2
+
+重构结果保存在\ ``results/``\ 目录下（由CLI自动创建），文件名为\ ``{数据文件名}_bsf.avi``\ 。
+
+.. image:: ./media/car-100kmh_bsf.gif
+   :target: ./media/car-100kmh_bsf.gif
+   :alt: BSF 重构效果展示
+   :width: 600
+
 
 光流估计
 --------
